@@ -1,0 +1,20 @@
+# API et backend (essentiels)
+fastapi==0.115.1
+uvicorn[standard]==0.29.0
+python-multipart
+sqlalchemy==2.0.40
+psycopg2-binary==2.9.9
+pydantic==2.10.6
+requests==2.32.3
+
+# Authentification
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Utilitaires
+typing_extensions==4.12.2
+python-dateutil==2.9.0.post0
+
+# Note: Les dépendances ML/Analytics (pandas, numpy, torch, etc.) 
+# sont dans requirements.txt pour la production complète
+# mais commentées dans le Dockerfile pour accélérer le build

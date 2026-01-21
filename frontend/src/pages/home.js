@@ -1,12 +1,14 @@
 import React from 'react';
+import Logo from '../components/Logo';
 import '../App.css';
 
 export default function Home() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Bienvenue à l'agence de transport collectif</h1>
-        <p>Prototype d'application web pour la gestion des billets et suivi des bus.</p>
+        <Logo variant="large" />
+        <p style={{ fontSize: '1.1em', marginTop: '20px' }}>Collective Transport Management System</p>
+        <p>Web application prototype for ticket management and bus tracking.</p>
       </header>
     </div>
   );

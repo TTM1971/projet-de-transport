@@ -1,0 +1,285 @@
+# ============================================
+# Fichiers et dossiers à ignorer dans Git
+# ============================================
+
+# ============================================
+# Python / Backend
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+env.bak/
+venv.bak/
+
+# PyCharm
+.idea/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# Poetry
+poetry.lock
+
+# ============================================
+# Node.js / Frontend
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+.nuxt/
+.cache/
+
+# Testing
+coverage/
+*.lcov
+.nyc_output/
+
+# Production
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ============================================
+# Environment variables & secrets
+# ============================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+*.env
+
+# Secrets and API keys
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+credentials.json
+service-account.json
+
+# ============================================
+# Docker
+# ============================================
+.dockerignore
+docker-compose.override.yml
+*.log
+
+# ============================================
+# Database
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+database.db
+*.dump
+pgdata/
+postgres_data/
+
+# ============================================
+# Logs
+# ============================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+*.log.*
+log/
+
+# ============================================
+# IDE / Editors
+# ============================================
+# Visual Studio Code
+.vscode/
+*.code-workspace
+.history/
+
+# IntelliJ IDEA / PyCharm / WebStorm
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ============================================
+# OS Generated files
+# ============================================
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.directory
+.Trash-*
+.nfs*
+
+# ============================================
+# Temporary files
+# ============================================
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo
+*~
+.cache/
+tmp/
+temp/
+
+# ============================================
+# Build artifacts
+# ============================================
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# ============================================
+# Testing
+# ============================================
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.cache
+test-results/
+junit.xml
+
+# ============================================
+# Documentation builds
+# ============================================
+docs/_build/
+site/
+
+# ============================================
+# Misc
+# ============================================
+# Data files (ajoutez vos fichiers de données sensibles ici)
+*.csv
+*.xlsx
+*.xls
+data/
+datasets/
+
+# Scripts de génération de données (si sensibles)
+# backend/generate_full_year_data.py  # Décommentez si vous ne voulez pas pousser ce fichier
+
+# Fichiers de sauvegarde
+*.orig
+*.rej
+
+# ============================================
+# Projet spécifique
+# ============================================
+# Dossiers de base de données locaux
+database/
+*.sql.gz
+
+# Fichiers de migration locaux (si vous avez des migrations sensibles)
+# backend/migrations/versions/*_local.py
+
+# Fichiers de seed/test data (si sensibles)
+# backend/seed_data.py  # Décommentez si vous ne voulez pas pousser ce fichier

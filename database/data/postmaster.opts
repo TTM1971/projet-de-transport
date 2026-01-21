@@ -1,1 +1,1 @@
-/usr/lib/postgresql/17/bin/postgres
+/usr/local/bin/postgres "-c" "shared_buffers=256MB" "-c" "max_connections=200" "-c" "tcp_keepalives_idle=300" "-c" "tcp_keepalives_interval=30" "-c" "tcp_keepalives_count=3" "-c" "statement_timeout=300000" "-c" "idle_in_transaction_session_timeout=30000" "-c" "log_connections=off" "-c" "log_disconnections=off" "-c" "log_statement=none" "-c" "log_duration=off" "-c" "log_min_duration_statement=-1"

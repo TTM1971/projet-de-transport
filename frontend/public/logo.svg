@@ -1,0 +1,32 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond bleu-gris -->
+  <rect width="512" height="512" fill="#a8b8c8"/>
+  
+  <!-- Cercle bleu foncé au centre -->
+  <circle cx="256" cy="256" r="120" fill="#1e3a5f"/>
+  
+  <!-- Lettre "i" blanche au centre -->
+  <text x="256" y="290" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="white" text-anchor="middle">i</text>
+  
+  <!-- Texte "TRESOR" en arc à gauche -->
+  <defs>
+    <path id="arcTop" d="M 150 180 A 150 150 0 0 1 362 180"/>
+  </defs>
+  <text fill="#1e3a5f" font-family="Arial, sans-serif" font-size="32" font-weight="300" letter-spacing="3">
+    <textPath href="#arcTop" startOffset="0%">TRESOR</textPath>
+  </text>
+  
+  <!-- Texte "MEGANE" en arc à droite -->
+  <defs>
+    <path id="arcBottom" d="M 362 332 A 150 150 0 0 1 150 332"/>
+  </defs>
+  <text fill="#1e3a5f" font-family="Arial, sans-serif" font-size="32" font-weight="300" letter-spacing="3">
+    <textPath href="#arcBottom" startOffset="0%">MEGANE</textPath>
+  </text>
+  
+  <!-- Symboles décoratifs de chaque côté -->
+  <text x="130" y="230" font-family="Arial, sans-serif" font-size="20" fill="#1e3a5f">*</text>
+  <text x="382" y="282" font-family="Arial, sans-serif" font-size="20" fill="#1e3a5f">*</text>
+  <text x="130" y="282" font-family="Arial, sans-serif" font-size="20" fill="#1e3a5f">*</text>
+  <text x="382" y="230" font-family="Arial, sans-serif" font-size="20" fill="#1e3a5f">*</text>
+</svg>

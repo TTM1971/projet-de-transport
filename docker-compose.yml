@@ -1,26 +1,64 @@
-version: '3.8'
-
 services:
   backend:
-    build: ./backend
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    environment:
+      - DB_HOST=database
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=transport_db
+      - DB_PORT=5432
     depends_on:
-      - database
+      database:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      # Exclure venv du volume pour éviter les conflits
+      - /app/venv
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
 
   database:
-    image: postgres:latest
+    image: postgres:17-alpine
     environment:
       POSTGRES_DB: transport_db
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+      # Configuration pour réduire les erreurs "Broken pipe"
+      POSTGRES_LOG_STATEMENT: "none"  # Ne pas logger toutes les requêtes (réduit les logs)
+      POSTGRES_LOG_ERROR_VERBOSITY: "terse"  # Logs d'erreur plus compacts
     ports:
       - "5432:5432"
     volumes:
       - ./database/data:/var/lib/postgresql/data
+    # Configuration des connexions TCP pour réduire les "Broken pipe"
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c max_connections=200
+      -c tcp_keepalives_idle=300
+      -c tcp_keepalives_interval=30
+      -c tcp_keepalives_count=3
+      -c statement_timeout=300000
+      -c idle_in_transaction_session_timeout=30000
+      -c log_connections=off
+      -c log_disconnections=off
+      -c log_statement=none
+      -c log_duration=off
+      -c log_min_duration_statement=-1
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d transport_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   minio:
-    image: minio/minio
+    image: minio/minio:latest
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -30,3 +68,9 @@ services:
     volumes:
       - ./ingestion_pipeline/data:/data
     command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
