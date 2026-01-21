@@ -22,12 +22,6 @@ Application web de gestion de transport collectif avec billetterie, suivi de flo
 ```bash
 # À la racine du projet
 docker-compose up --build
-```
-
-Cette commande va :
-- ✅ Démarrer PostgreSQL (port 5432)
-- ✅ Démarrer MinIO (ports 9000, 9001)
-- ✅ Construire et démarrer le backend FastAPI (port 8000)
 
 ### 2. Démarrer le frontend (dans un nouveau terminal)
 
