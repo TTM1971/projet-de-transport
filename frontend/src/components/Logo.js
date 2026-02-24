@@ -17,22 +17,22 @@ export default function Logo({ variant = 'default' }) {
       <div className="logo-acronym">MEGANE</div>
       <div className="logo-description">
         <div className="logo-line">
-          <span className="logo-letter">M</span>anagement
-        </div>
-        <div className="logo-line">
-          <span className="logo-letter">E</span>nhanced
-        </div>
-        <div className="logo-line">
-          <span className="logo-letter">G</span>round
-        </div>
-        <div className="logo-line">
-          <span className="logo-letter">A</span>nalytics <span className="logo-amp">&</span>
-        </div>
-        <div className="logo-line">
-          <span className="logo-letter">N</span>etwork
+          <span className="logo-letter">M</span>obility
         </div>
         <div className="logo-line">
           <span className="logo-letter">E</span>ngine
+        </div>
+        <div className="logo-line">
+          <span className="logo-letter">G</span>uidance
+        </div>
+        <div className="logo-line">
+          <span className="logo-letter">A</span>nalytics
+        </div>
+        <div className="logo-line">
+          <span className="logo-letter">N</span>etworked
+        </div>
+        <div className="logo-line">
+          <span className="logo-letter">E</span>valuation
         </div>
       </div>
     </div>
