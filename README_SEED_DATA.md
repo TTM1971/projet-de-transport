@@ -90,9 +90,4 @@ GET /analytics/dashboard/historical?start_date=2024-01-01&end_date=2024-01-31&bu
 - Bus anciens (>7 ans) plus à risque de pannes
 - Quelques annulations/remboursements (10% des billets)
 
-## Notes importantes
 
-- Les prix sont générés en EUR mais affichés en CAD dans l'interface
-- Le script vérifie l'existence des données avant de créer pour éviter les doublons
-- Les données sont générées de manière réaliste avec des variations quotidiennes
-- La date de départ par défaut est : maintenant - 30 jours
