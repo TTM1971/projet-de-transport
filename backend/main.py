@@ -61,9 +61,14 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 # Configuration CORS pour permettre les requêtes depuis le frontend
+# Autorise les requêtes depuis localhost (développement local) et depuis le conteneur Docker
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://frontend:3000",  # Pour les requêtes depuis le conteneur frontend
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

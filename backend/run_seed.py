@@ -13,3 +13,4 @@ if __name__ == "__main__":
     print("Démarrage de la génération de données de test...")
     seed_data()
     print("\n✅ Génération terminée !")
+

@@ -1,0 +1,1529 @@
+%!TEX TS-program = xelatex
+%!TEX encoding = UTF-8 Unicode
+
+\documentclass[a4paper, 12pt]{book}
+
+\usepackage[T1]{fontenc}
+\usepackage[english, french]{babel}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage{mdframed}
+\usepackage{anyfontsize}
+\usepackage[colorlinks=true,urlcolor=blue]{hyperref}
+\usepackage[margin=1in]{geometry}
+\setlength{\parskip}{0.3em}
+\setlength{\floatsep}{8pt plus 1pt minus 1pt}
+\setlength{\textfloatsep}{12pt plus 1pt minus 1pt}
+\setlength{\intextsep}{8pt plus 1pt minus 1pt}
+\setlength{\topskip}{1\topskip}
+\setlength{\topsep}{4pt}
+\setlength{\partopsep}{0pt}
+\setlength{\itemsep}{1.5pt}
+\setlength{\parsep}{1.5pt}
+% Réduire les espaces entre sections
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\titlespacing*{\subsubsection}{0pt}{8pt}{4pt}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{titlesec}
+\usetikzlibrary{shapes,arrows,positioning,fit,backgrounds,calc,decorations.pathmorphing,shapes.geometric}
+
+% Configuration pour le code
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{gray!10},
+    frame=single,
+    breaklines=true,
+    captionpos=b
+}
+
+\title{SYSTÈME INTELLIGENT DE GESTION ET DE SURVEILLANCE DES TRANSPORTS COLLECTIFS :\\Analyse du comportement des chauffeurs basée sur les données embarquées et la vision par ordinateur}
+\author{TAMBAT Tresor Megane}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\chapter*{Introduction Générale}
+\addcontentsline{toc}{chapter}{Introduction Générale}
+
+Le transport collectif représente un enjeu majeur pour les villes contemporaines, confrontées à des défis croissants liés à la mobilité urbaine, à la congestion routière, à la pollution environnementale et aux attentes toujours plus élevées des usagers. Dans ce contexte, l'intégration de systèmes intelligents de gestion et de surveillance apparaît comme une solution incontournable pour améliorer significativement la sécurité, la ponctualité, le confort des usagers ainsi que l'efficacité opérationnelle globale des réseaux de transport collectif.
+
+Ce mémoire présente la conception, le développement et l'implémentation d'un système intelligent de gestion des transports collectifs, avec un focus particulier sur l'analyse du comportement des chauffeurs à travers l'exploitation de données embarquées et de techniques de vision par ordinateur. L'objectif principal est de fournir une plateforme technologique complète permettant aux entreprises de transport collectif d'optimiser leurs opérations quotidiennes tout en garantissant une amélioration continue de la qualité de service.
+
+Le travail présenté s'articule autour de plusieurs axes complémentaires : la définition d'une architecture technique modulaire et évolutive, le développement d'un prototype fonctionnel intégrant les fonctionnalités essentielles de gestion opérationnelle, et la proposition d'une approche innovante basée sur l'intelligence artificielle pour l'analyse comportementale des chauffeurs.
+
+\newpage
+
+\chapter{Définition et généralités sur le transport}
+
+\section{Définition du transport}
+
+\subsection{Définition générale}
+Le transport peut être défini comme l'ensemble des opérations et moyens permettant le déplacement de personnes, de marchandises ou d'informations d'un endroit à un autre. Cette activité est intrinsèquement liée au développement humain puisqu'elle répond au besoin essentiel de mobilité. Historiquement, le transport a permis l'échange culturel et commercial, façonnant ainsi le visage des sociétés modernes en stimulant la croissance économique et en renforçant les interactions humaines.
+
+\subsection{Les différentes perspectives}
+\begin{itemize}
+    \item \textbf{Économie :} Sous une perspective économique, le transport constitue un élément fondamental dans le fonctionnement et la compétitivité des marchés. Il joue un rôle clé dans la chaîne logistique, assurant la circulation fluide des biens et des services, et favorise ainsi le commerce à l'échelle locale et internationale.
+    
+    \item \textbf{Géographie :} Du point de vue géographique, le transport est un facteur structurant des territoires. Il façonne l'organisation spatiale des villes, influence la répartition démographique et conditionne le développement régional.
+    
+    \item \textbf{Sociologie :} Le transport peut également être analysé sous une perspective sociologique. Les moyens et modes de transport adoptés par une société reflètent ses choix sociaux, ses valeurs et ses modes de vie.
+\end{itemize}
+
+\section{Historique et évolution du transport}
+
+\subsection{Les débuts du transport humain}
+L'histoire du transport est intimement liée à celle de l'humanité elle-même. Dès les premiers temps de leur existence, les êtres humains ont ressenti la nécessité de se déplacer pour répondre à leurs besoins fondamentaux. Les débuts du transport humain furent donc marqués par des déplacements essentiellement pédestres, utilisant uniquement la marche comme moyen de mobilité.
+
+\subsection{L'évolution vers le transport mécanisé}
+L'évolution vers le transport mécanisé constitue une véritable révolution dans l'histoire du transport humain. Le tournant majeur de cette transformation fut l'invention de la roue, il y a plus de 5000 ans, en Mésopotamie. La véritable accélération de cette mécanisation intervint néanmoins au cours du XVIIIe siècle, avec la révolution industrielle et l'introduction de la machine à vapeur.
+
+\subsection{Développement du transport public moderne}
+Les progrès techniques du XIXe et du XXe siècle permirent l'émergence du transport public moderne tel que nous le connaissons aujourd'hui. Le XXe siècle marque l'apparition et la généralisation du bus motorisé, du métro urbain, et du réseau ferroviaire régional et national.
+
+\section{Classification des modes de transport}
+
+Les modes de transport se divisent généralement en trois grandes catégories selon leur milieu de circulation : terrestre, maritime et fluvial, ainsi qu'aérien.
+
+\subsection{Transport terrestre}
+Le transport terrestre représente le mode de transport le plus répandu et accessible. Il comprend principalement le transport routier et ferroviaire.
+
+\subsection{Transport maritime et fluvial}
+Le transport maritime et fluvial occupe également une place importante dans la mobilité globale, particulièrement dans le transport de marchandises à grande échelle.
+
+\subsection{Transport aérien}
+Le transport aérien englobe l'ensemble des moyens de transport utilisant les voies aériennes. Il inclut principalement les avions commerciaux destinés au transport de passagers et de fret sur des longues distances.
+
+\section{Le transport collectif terrestre}
+
+\subsection{Définition spécifique du transport collectif}
+Le transport collectif, également appelé transport en commun, désigne spécifiquement les systèmes de déplacement destinés à transporter simultanément plusieurs personnes sur un même trajet ou itinéraire. Contrairement au transport individuel, le transport collectif est organisé et géré par des autorités publiques ou privées dans le but de fournir un service régulier et accessible à tous les usagers.
+
+\subsection{Objectifs et enjeux du transport collectif}
+Les objectifs principaux du transport collectif sont multiples. Premièrement, il vise à faciliter la mobilité des citoyens en assurant des déplacements réguliers, abordables et accessibles, réduisant ainsi la dépendance envers les véhicules privés. Ensuite, il joue un rôle fondamental dans la réduction de l'impact environnemental en limitant les émissions de gaz à effet de serre, la pollution de l'air et sonore, et la consommation énergétique par passager.
+
+\subsection{Types de transport collectif}
+On distingue principalement trois grandes catégories :
+\begin{itemize}
+    \item \textbf{Bus urbains et interurbains} : Ils constituent l'un des moyens les plus répandus dans les villes et agglomérations.
+    \item \textbf{Métros et tramways} : Ils sont généralement réservés aux grandes agglomérations, caractérisés par leur grande capacité, rapidité et fréquence élevée de passage.
+    \item \textbf{Trains régionaux et de banlieue} : Ils desservent les liaisons interurbaines ou périurbaines sur de moyennes à longues distances.
+\end{itemize}
+
+\section{Importance du transport collectif terrestre dans les villes contemporaines}
+
+Le transport collectif occupe une place stratégique dans le fonctionnement des villes modernes. Son importance grandissante répond directement aux défis urbains actuels, tels que la croissance démographique rapide, l'augmentation des embouteillages, les problèmes de pollution environnementale, et les inégalités d'accès à la mobilité.
+
+\subsection{Réduction des embouteillages et de la pollution}
+En effet, un autobus standard peut remplacer plusieurs dizaines de véhicules individuels sur la route, ce qui diminue mécaniquement la congestion routière, facilite la fluidité du trafic et réduit ainsi les temps de déplacement.
+
+\subsection{Accessibilité sociale et égalité territoriale}
+Le transport collectif garantit aux citoyens, quels que soient leur statut économique ou leur lieu de résidence, un accès facilité et abordable aux services essentiels tels que l'éducation, la santé, l'emploi, et les loisirs.
+
+\subsection{Développement économique et urbain}
+Un réseau performant de transport collectif représente un puissant levier de croissance pour les villes contemporaines. Il attire les entreprises et les investissements, favorise l'émergence de pôles économiques dynamiques, et stimule l'emploi grâce à l'amélioration de la connectivité entre les différentes zones urbaines et périurbaines.
+
+\chapter{Système intelligent de gestion des transports collectifs et notion de comportement du chauffeur}
+
+\section{Introduction}
+
+La gestion des transports collectifs représente aujourd'hui un enjeu stratégique majeur pour les villes contemporaines. Face aux défis croissants tels que l'accroissement démographique, la congestion urbaine, les préoccupations environnementales et les attentes toujours plus élevées des usagers, les entreprises de transport collectif doivent impérativement repenser leurs pratiques de gestion.
+
+\section{Définition d'un système intelligent de gestion des transports collectifs}
+
+Un système intelligent de gestion des transports collectifs désigne une plateforme technologique avancée, capable d'intégrer plusieurs outils numériques de collecte, de traitement et d'analyse approfondie des données afin d'optimiser la gestion opérationnelle et stratégique des réseaux de transport. Ces systèmes reposent généralement sur une architecture modulaire, permettant une intégration rapide et flexible au sein des infrastructures existantes des entreprises de transport.
+
+Le rôle principal de ces systèmes intelligents consiste à surveiller précisément et en continu l'activité opérationnelle. Grâce à des dispositifs embarqués tels que les capteurs GPS, les accéléromètres, ou encore les modules télémétriques, ils permettent un suivi des véhicules en temps réel, ce qui assure une visibilité optimale sur le déroulement effectif du service.
+
+Une fois ces données collectées, elles sont transmises vers des plateformes d'analyse spécialisées, souvent hébergées sur des environnements cloud sécurisés. À ce niveau, des algorithmes avancés, notamment ceux relevant du domaine de l'intelligence artificielle et du Machine Learning, procèdent à leur analyse en vue de détecter des anomalies, d'anticiper des incidents techniques, ou encore de prédire des situations problématiques telles que des retards significatifs ou des comportements à risque.
+
+\section{Qu'est-ce qu'on entend par « comportement du chauffeur » ?}
+
+Dans le contexte de la gestion du transport collectif, le comportement du chauffeur fait référence à l'ensemble des actions observables ainsi qu'aux attitudes adoptées par le conducteur durant l'exercice de son activité professionnelle. Plus précisément, il s'agit des manières concrètes avec lesquelles un chauffeur interagit avec le véhicule, les passagers, et l'environnement extérieur tout au long de son trajet.
+
+\subsection{Aspects observables}
+Dans la première catégorie, celle des aspects observables directement, figurent les actions mesurables de manière objective telles que les accélérations soudaines ou répétées, les freinages brusques, la vitesse moyenne et les dépassements éventuels des limites autorisées, ainsi que les arrêts non prévus ou non justifiés durant le parcours.
+
+\subsection{Aspects indirects ou latents}
+En ce qui concerne les aspects indirects, le comportement du chauffeur est également façonné par des facteurs psychologiques ou physiologiques moins immédiatement perceptibles, mais dont l'impact est significatif. Parmi ces éléments, nous retrouvons notamment le niveau d'attention général porté à la route, la fatigue accumulée tout au long des heures de conduite, l'état de stress ou d'anxiété pouvant découler de situations particulières.
+
+\subsection{Facteurs d'influence}
+Plusieurs facteurs sont susceptibles d'influencer significativement le comportement des chauffeurs. Parmi ceux-ci, on note tout d'abord les conditions de travail, qui incluent la durée et la flexibilité des horaires, les pressions liées au respect des délais imposés, ainsi que les contraintes organisationnelles pouvant induire un stress chronique ou aigu.
+
+\chapter{Diagnostic des problématiques liées au comportement des chauffeurs et rôle de l'IA}
+
+\section{Importance du comportement des chauffeurs dans la performance du service}
+
+Premièrement, le comportement du chauffeur conditionne directement la sécurité à bord. Une conduite imprudente ou des comportements de prise de risques augmentent le potentiel d'accidents pouvant avoir des conséquences dramatiques tant sur le plan humain qu'économique.
+
+Ensuite, du point de vue environnemental et économique, la conduite influence de manière directe la consommation énergétique. En effet, une conduite inefficace, caractérisée par des accélérations et des décélérations fréquentes et mal anticipées, entraîne une surconsommation de carburant.
+
+La maintenance et l'usure prématurée des véhicules représentent également un point clé lié au comportement des chauffeurs. Des manœuvres répétées et brutales, notamment des freinages excessifs et des changements de rapports inadaptés, entraînent une usure prématurée des composants critiques.
+
+Enfin, le comportement du chauffeur impacte profondément l'expérience vécue par les usagers. Une conduite irrégulière, marquée par des à-coups ou des manœuvres brusques, altère considérablement le confort à bord, générant une expérience négative pour les passagers.
+
+\section{Problématiques globales liées au comportement des chauffeurs}
+
+\subsection{Prises de risque et sécurité}
+La sécurité constitue une priorité absolue dans les transports collectifs. Cependant, divers comportements des chauffeurs peuvent augmenter significativement les risques d'accidents. Parmi ceux-ci, les accélérations brutales, les freinages soudains, les dépassements de vitesse autorisée ou encore le non-respect des signalisations sont particulièrement préoccupants.
+
+\subsection{Surconsommation de carburant et émissions polluantes}
+Un style de conduite inapproprié contribue directement à une consommation excessive de carburant. Les accélérations et freinages répétés ou l'usage prolongé de régimes moteurs élevés augmentent la consommation énergétique.
+
+\subsection{Usure prématurée et maintenance}
+Les manœuvres brutales dégradent rapidement les composants mécaniques tels que les freins, les transmissions et les suspensions. Cela induit des coûts de maintenance plus élevés et diminue la disponibilité opérationnelle des véhicules.
+
+\subsection{Ponctualité et régularité des services}
+Des comportements de conduite inadéquats comme la mauvaise anticipation ou l'inefficacité aux arrêts peuvent compromettre la ponctualité. Cela provoque des retards en cascade, affectant la régularité du réseau et la satisfaction des usagers.
+
+\section{Enjeux d'intervention de l'IA sur ces problématiques}
+
+Face aux problématiques identifiées précédemment liées au comportement des chauffeurs dans le secteur du transport collectif par bus, l'IA présente un potentiel considérable pour apporter des solutions ciblées et efficaces.
+
+\subsection{Détection des conduites à risque}
+Les avancées récentes notamment en apprentissage automatique supervisé et en apprentissage profond, permettent d'analyser les données télémétriques (accélérations, freinages, trajectoires, vitesse) collectées en temps réel à bord des bus.
+
+\subsection{Optimisation de la consommation d'énergie}
+L'IA offre également des possibilités importantes pour optimiser la consommation énergétique grâce à l'analyse prédictive. À partir des données historiques sur les comportements de conduite, les modèles de régression prédictifs ou les réseaux neuronaux récurrents (RNN, LSTM) peuvent anticiper la consommation d'énergie future.
+
+\subsection{Maintenance prédictive}
+Grâce à l'utilisation de modèles prédictifs basés sur l'apprentissage automatique supervisé et les séries temporelles, il est possible d'anticiper les besoins en maintenance des véhicules.
+
+\subsection{Amélioration de la ponctualité}
+L'intégration de l'IA dans la gestion opérationnelle des services de transport collectif offre également un potentiel majeur pour améliorer la ponctualité. En combinant les données de trafic en temps réel, les conditions météorologiques et les historiques des trajets, les modèles prédictifs peuvent générer des estimations précises des temps de parcours.
+
+\section{Priorisation des problèmes ciblés dans ce mémoire}
+
+Compte tenu de l'ensemble des problématiques préalablement identifiées et du potentiel que l'intelligence artificielle (IA) offre pour les résoudre, il est indispensable, dans une démarche opérationnelle, de prioriser certaines de ces problématiques.
+
+\subsection{Sécurité routière et conduite à risque}
+La sécurité routière constitue une priorité absolue, tant sur le plan humain qu'économique. Les conduites à risque telles que les excès de vitesse, les freinages d'urgence ou les accélérations brutales sont directement responsables d'accidents graves et fréquents dans le secteur du transport collectif.
+
+\subsection{Consommation d'énergie et maintenance}
+La consommation énergétique excessive et les coûts de maintenance élevés liés à une conduite inadéquate représentent un enjeu économique majeur. Ces coûts affectent directement la rentabilité des entreprises exploitantes et leur capacité à investir dans l'amélioration continue de leur flotte.
+
+\subsection{Ponctualité et expérience usager}
+La ponctualité et le confort sont deux critères décisifs dans l'évaluation de la qualité du service par les usagers. L'expérience négative générée par des retards récurrents et une conduite inconfortable diminue fortement l'attractivité des transports en commun.
+
+\chapter{Conception et architecture du système Megane}
+
+\section{Présentation de l'application Megane}
+
+\subsection{Contexte et objectifs}
+
+L'application \textbf{Megane} est un système intelligent de gestion des transports collectifs développé pour répondre aux besoins opérationnels quotidiens des entreprises de transport par bus. Cette application web permet la gestion complète des opérations de transport, depuis la vente de billets jusqu'au suivi de la flotte et à l'analyse des performances.
+
+L'objectif principal de Megane est de fournir une plateforme centralisée permettant aux différents acteurs (agents de guichet, gestionnaires, techniciens de maintenance, administrateurs) de gérer efficacement les opérations de transport collectif. Le système se concentre sur les aspects opérationnels essentiels : la billetterie, la planification des trajets, la gestion de la flotte, la maintenance des véhicules et l'analyse des données.
+
+\subsection{Périmètre fonctionnel}
+
+Le périmètre fonctionnel de Megane couvre les domaines suivants :
+
+\begin{itemize}
+    \item \textbf{Billetterie} : vente de billets au guichet avec gestion des sièges, des modes de paiement et suivi des transactions.
+    \item \textbf{Planification} : création et gestion des départs avec affectation des bus et des chauffeurs aux trajets.
+    \item \textbf{Gestion de flotte} : suivi de l'état des véhicules (en service, en maintenance, hors service) et enregistrement des pings de localisation.
+    \item \textbf{Maintenance} : enregistrement des interventions en atelier avec suivi des coûts et des pièces remplacées.
+    \item \textbf{Gestion des ressources} : gestion des bus, lignes, destinations, chauffeurs et utilisateurs.
+    \item \textbf{Analytics} : tableaux de bord et analyses détaillées du chiffre d'affaires, des ventes et des trajets.
+\end{itemize}
+
+\subsection{Indicateurs clés de performance (KPI)}
+
+Pour mesurer les performances et piloter efficacement l'application, plusieurs indicateurs clés sont suivis :
+
+\begin{itemize}
+    \item \textbf{Chiffre d'affaires} : suivi quotidien et historique du chiffre d'affaires par agent, par destination, par ligne.
+    \item \textbf{Ventes de billets} : nombre de billets vendus par jour, par agent, par destination.
+    \item \textbf{Disponibilité de la flotte} : nombre de bus en service, en maintenance, hors service.
+    \item \textbf{Interventions de maintenance} : nombre d'interventions en cours, coûts de maintenance.
+    \item \textbf{Utilisation des ressources} : taux d'occupation des bus, répartition des trajets par ligne.
+\end{itemize}
+
+\section{Architecture technique de Megane}
+
+\subsection{Schéma global}
+
+L'architecture de Megane repose sur une architecture web classique en trois tiers, adaptée aux besoins opérationnels d'une entreprise de transport. L'architecture comprend :
+
+\begin{itemize}
+    \item \textbf{Couche présentation} : interface web React accessible via navigateur, offrant des interfaces adaptées à chaque rôle utilisateur.
+    \item \textbf{Couche applicative} : API REST FastAPI gérant la logique métier, l'authentification et l'autorisation selon les rôles.
+    \item \textbf{Couche données} : base de données PostgreSQL pour le stockage relationnel des données transactionnelles et MinIO pour l'archivage des données historiques.
+    \item \textbf{Collecte de données} : réception des pings de localisation des bus via API REST, permettant un suivi basique de l'état des véhicules.
+\end{itemize}
+
+\subsection{Couches logicielles}
+
+L'application Megane est organisée en plusieurs couches logicielles :
+
+\begin{itemize}
+    \item \textbf{Interface utilisateur (Frontend)} : 
+    \begin{itemize}
+        \item Application React 19 avec routage côté client
+        \item Composants réutilisables pour les formulaires, tableaux et graphiques
+        \item Gestion d'état via Context API pour l'authentification
+        \item Visualisation de données avec Chart.js pour les tableaux de bord
+    \end{itemize}
+    
+    \item \textbf{API Backend (FastAPI)} :
+    \begin{itemize}
+        \item Routes REST organisées par domaine fonctionnel (billets, bus, départs, etc.)
+        \item Middleware d'authentification JWT et contrôle d'accès RBAC
+        \item Validation des données avec Pydantic
+        \item Gestion des erreurs et logging des actions
+    \end{itemize}
+    
+    \item \textbf{Base de données} :
+    \begin{itemize}
+        \item PostgreSQL pour les données transactionnelles (ventes, départs, bus, etc.)
+        \item ORM SQLAlchemy pour l'abstraction des requêtes
+        \item MinIO pour l'archivage des données historiques (data lake)
+    \end{itemize}
+    
+    \item \textbf{Infrastructure} :
+    \begin{itemize}
+        \item Conteneurisation Docker pour tous les services
+        \item Orchestration via Docker Compose
+        \item Volumes persistants pour les données
+    \end{itemize}
+\end{itemize}
+
+\subsection{Sécurité et gouvernance des données}
+
+Megane implémente plusieurs mécanismes de sécurité :
+
+\begin{itemize}
+    \item \textbf{Authentification} : système d'authentification basé sur JWT (JSON Web Tokens) avec expiration des sessions.
+    \item \textbf{Autorisation} : contrôle d'accès basé sur les rôles (RBAC) avec permissions granulaires par fonctionnalité.
+    \item \textbf{Audit} : journalisation de toutes les actions utilisateurs dans une table d'audit pour traçabilité.
+    \item \textbf{Validation des données} : validation stricte des entrées utilisateur via Pydantic pour prévenir les injections et erreurs.
+    \item \textbf{Gestion des sessions} : suivi des sessions actives avec possibilité de déconnexion à distance.
+\end{itemize}
+
+\section{Modules fonctionnels de Megane}
+
+L'application Megane se compose de plusieurs modules fonctionnels interconnectés, chacun répondant à un besoin opérationnel spécifique.
+
+\subsection{Module de billetterie}
+
+Le module de billetterie est au cœur de l'application. Il permet aux agents de guichet de vendre des billets de manière efficace et traçable.
+
+\textbf{Fonctionnalités principales} :
+\begin{itemize}
+    \item \textbf{Vente de billets} : interface intuitive permettant de sélectionner un départ, choisir un siège disponible, saisir les informations du client et enregistrer la transaction.
+    \item \textbf{Gestion des sièges} : affichage visuel de la disponibilité des places avec mise à jour en temps réel lors des ventes.
+    \item \textbf{Modes de paiement} : support de trois modes de paiement (espèces, carte bancaire, mobile money).
+    \item \textbf{Consultation des ventes} : historique complet des ventes avec filtres par date, bus, destination ou agent.
+    \item \textbf{Statistiques agent} : tableau de bord personnel pour chaque agent avec son chiffre d'affaires du jour et nombre de billets vendus.
+\end{itemize}
+
+\subsection{Module de planification des départs}
+
+Ce module permet aux gestionnaires de planifier et gérer les trajets.
+
+\textbf{Fonctionnalités principales} :
+\begin{itemize}
+    \item \textbf{Création de départs} : création manuelle de départs avec sélection du bus, de la ligne, de la destination, du chauffeur et de l'horaire.
+    \item \textbf{Génération automatique} : génération automatique de départs futurs sur une période donnée selon des règles prédéfinies (fréquence, horaires).
+    \item \textbf{Gestion des statuts} : suivi de l'état de chaque départ (programmé, en cours, terminé, annulé).
+    \item \textbf{Consultation par date} : visualisation des départs disponibles pour une date donnée avec filtres.
+    \item \textbf{Comptage des billets} : affichage du nombre de billets vendus pour chaque départ.
+\end{itemize}
+
+\subsection{Module de gestion de la flotte}
+
+Ce module permet la gestion complète du parc de véhicules.
+
+\textbf{Fonctionnalités principales} :
+\begin{itemize}
+    \item \textbf{Enregistrement des bus} : création et modification des fiches bus avec toutes les caractéristiques (immatriculation, marque, modèle, capacité, année).
+    \item \textbf{Suivi des statuts} : gestion des statuts des véhicules (disponible, en service, en maintenance, hors service).
+    \item \textbf{Suivi par pings} : réception et stockage des pings de localisation GPS des bus avec coordonnées et statut (démarré/arrêté).
+    \item \textbf{Détails par bus} : vue détaillée de chaque bus avec historique des trajets, interventions et assignations de chauffeurs.
+    \item \textbf{Statistiques d'utilisation} : calcul automatique des statistiques d'utilisation de chaque véhicule.
+\end{itemize}
+
+\subsection{Module de maintenance}
+
+Ce module permet aux techniciens de maintenance de gérer les interventions sur les véhicules.
+
+\textbf{Fonctionnalités principales} :
+\begin{itemize}
+    \item \textbf{Enregistrement d'interventions} : création d'interventions avec motif, gravité, dates d'entrée/sortie, coût et pièces remplacées.
+    \item \textbf{Suivi des interventions en cours} : visualisation de toutes les interventions non terminées avec détails.
+    \item \textbf{Historique par bus} : consultation de l'historique complet des interventions pour chaque véhicule.
+    \item \textbf{Statistiques maintenance} : tableau de bord dédié avec nombre de bus en maintenance, interventions en cours, coûts.
+\end{itemize}
+
+\subsection{Module de gestion des ressources}
+
+Ce module regroupe la gestion des entités de référence du système.
+
+\textbf{Fonctionnalités principales} :
+\begin{itemize}
+    \item \textbf{Gestion des lignes} : création et modification des lignes de transport avec points de départ et d'arrivée.
+    \item \textbf{Gestion des destinations} : gestion du référentiel des destinations avec tarifs associés.
+    \item \textbf{Gestion des chauffeurs} : enregistrement des chauffeurs avec informations (nom, prénom, numéro de permis, type d'affectation jour/nuit).
+    \item \textbf{Assignation bus-chauffeurs} : affectation des chauffeurs aux bus avec dates et types d'affectation.
+    \item \textbf{Gestion des utilisateurs} : création et gestion des comptes utilisateurs avec approbation et attribution de rôles.
+\end{itemize}
+
+\subsection{Module d'analytics et de reporting}
+
+Ce module fournit des analyses et des tableaux de bord pour le pilotage opérationnel.
+
+\textbf{Fonctionnalités principales} :
+\begin{itemize}
+    \item \textbf{Tableaux de bord personnalisés} : tableaux de bord adaptés à chaque rôle (admin, gestionnaire, agent, maintenance).
+    \item \textbf{Analyses de chiffre d'affaires} : graphiques temporels du chiffre d'affaires avec filtres par ligne, destination, bus ou chauffeur.
+    \item \textbf{Analyses de ventes} : statistiques détaillées des ventes de billets par jour avec visualisations graphiques.
+    \item \textbf{Analyses de trajets} : vue détaillée des trajets par jour avec répartition des billets vendus, chiffre d'affaires et statistiques par trajet.
+    \item \textbf{Indicateurs de performance} : KPI en temps réel (bus en service, interventions, ventes du jour, etc.).
+\end{itemize}
+
+\section{Technologies et outils retenus}
+
+\subsection{Backend}
+\begin{itemize}
+    \item \textbf{Python 3.11+} : langage de programmation principal
+    \item \textbf{FastAPI} : framework moderne et performant pour la création d'API REST
+    \item \textbf{SQLAlchemy} : ORM pour la gestion de la base de données
+    \item \textbf{Pydantic} : validation des données et gestion des schémas
+    \item \textbf{JWT} : authentification sécurisée via tokens
+    \item \textbf{Uvicorn} : serveur ASGI pour FastAPI
+\end{itemize}
+
+\subsection{Base de données}
+\begin{itemize}
+    \item \textbf{PostgreSQL 17} : base de données relationnelle robuste et performante
+    \item \textbf{Extensions} : support des types JSONB, contraintes, extensions temporelles
+\end{itemize}
+
+\subsection{Frontend}
+\begin{itemize}
+    \item \textbf{React 19} : bibliothèque JavaScript pour la création d'interfaces utilisateur
+    \item \textbf{React Router} : gestion du routage côté client
+    \item \textbf{Axios} : client HTTP pour les appels API
+    \item \textbf{Chart.js} : visualisation de données et graphiques
+\end{itemize}
+
+\subsection{Infrastructure et déploiement}
+\begin{itemize}
+    \item \textbf{Docker} : conteneurisation des services
+    \item \textbf{Docker Compose} : orchestration des conteneurs
+    \item \textbf{MinIO} : stockage objet compatible S3 pour le data lake
+\end{itemize}
+
+\chapter{Implémentation du prototype}
+
+\section{Objectif du prototype réduit}
+
+Le prototype développé répond aux besoins fonctionnels suivants :
+\begin{itemize}
+    \item \textbf{Enregistrement des ventes de billets au guichet} : saisie de chaque transaction (bus, destination, siège, agent, mode de paiement, horodatage).
+    \item \textbf{Consultation de l'historique des ventes} : accès aux données passées avec possibilité de filtrage par date ou par bus.
+    \item \textbf{Enregistrement des dates de passage des bus au garage} : journalisation des entrées et sorties.
+    \item \textbf{Consultation de l'historique de maintenance} : visualisation des interventions et des périodes d'immobilisation.
+    \item \textbf{Gestion des rôles utilisateur} : création et authentification des comptes agent, gestionnaire, maintenance et administrateur, avec droits spécifiques.
+\end{itemize}
+
+\section{Analyse des besoins et définition des cas d'utilisation}
+
+\subsection{Cas d'utilisation n°1 – Vente d'un billet au guichet}
+
+\textbf{Acteur principal} : Agent de guichet
+
+\textbf{Précondition} : L'agent est authentifié et dispose des droits « Agent de guichet ».
+
+\textbf{Flux principal} :
+\begin{enumerate}
+    \item L'agent sélectionne une destination et un bus parmi la liste des affectations du jour.
+    \item Le système affiche le plan de sièges avec les places libres.
+    \item L'agent choisit un siège, saisit les informations du passager (nom, contact) et sélectionne le mode de paiement (espèces, carte, mobile-money).
+    \item Le système génère un enregistrement de billet (bus, destination, siège, agent, horodatage, mode de paiement) et renvoie un reçu (numéro unique ou QR code).
+    \item L'agent imprime le reçu et remet le billet au passager.
+\end{enumerate}
+
+\textbf{Postcondition} : La transaction est stockée dans la base de données et assimilée au flux d'historique de ventes.
+
+\subsection{Cas d'utilisation n°2 – Enregistrement périodique du statut des bus (ping)}
+
+\textbf{Acteur principal} : Processus automatique (ou service de collecte)
+
+\textbf{Précondition} : Chaque bus est configuré pour envoyer automatiquement son « ping ».
+
+\textbf{Flux principal} :
+\begin{enumerate}
+    \item À intervalle régulier (paramétrable, ex.~toutes les 5 min), le boîtier embarqué envoie un message à l'API : \texttt{\{ id\_bus, date\_heure, statut : démarré/arrêté \}}.
+    \item L'API valide et stocke ce ping, puis renvoie un accusé de réception.
+\end{enumerate}
+
+\textbf{Postcondition} : Chaque « ping » est historisé sans transformation dans la base de données.
+
+\subsection{Cas d'utilisation n°3 – Enregistrement des passages en atelier}
+
+\textbf{Acteur principal} : Responsable de planification ou technicien de maintenance
+
+\textbf{Précondition} : Le responsable est authentifié et a le rôle approprié.
+
+\textbf{Flux principal} :
+\begin{enumerate}
+    \item Le responsable ouvre l'interface « Passages en atelier ».
+    \item Il saisit l'identifiant du bus, la date et l'heure d'entrée en garage, puis la date et l'heure de sortie lorsque le véhicule est prêt.
+    \item Le système enregistre ces deux événements (entrée/sortie) dans un objet historique.
+    \item En cas de besoin, le responsable peut consulter ou modifier un passage antérieur.
+\end{enumerate}
+
+\textbf{Postcondition} : Les dates d'atelier sont historisées et accessibles en lecture seule par les managers et contrôleurs.
+
+\subsection{Définition des rôles utilisateur et permissions}
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|p{6.2cm}|p{6.2cm}|}
+\hline
+\textbf{Rôle} & \textbf{Permis} & \textbf{Interdit} \\
+\hline
+\textbf{Agent de guichet} & 
+\begin{itemize}
+    \item Saisir une vente de billet
+    \item Sélectionner bus/destination/siège
+    \item Choisir le mode de paiement
+    \item Consulter ses propres transactions
+    \item Consulter les départs disponibles
+\end{itemize} &
+\begin{itemize}
+    \item Affecter un bus à une ligne
+    \item Enregistrer un passage en atelier
+    \item Consulter l'historique global
+    \item Modifier les données de gestion
+\end{itemize} \\
+\hline
+\textbf{Gestionnaire} & 
+\begin{itemize}
+    \item Affecter des bus aux destinations et créneaux
+    \item Enregistrer/modifier les passages en atelier
+    \item Consulter l'historique complet
+    \item Gérer les bus, lignes, destinations
+    \item Gérer les chauffeurs
+    \item Générer des départs
+\end{itemize} &
+\begin{itemize}
+    \item Émettre ou modifier des billets
+    \item Accéder aux options d'admin (rapports globaux avancés)
+\end{itemize} \\
+\hline
+\textbf{Maintenance} &
+\begin{itemize}
+    \item Consulter l'historique complet
+    \item Enregistrer des interventions
+    \item Consulter les bus en maintenance
+    \item Suivre les interventions en cours
+\end{itemize} &
+\begin{itemize}
+    \item Modifier les ventes ou affectations
+    \item Gérer les utilisateurs
+\end{itemize} \\
+\hline
+\textbf{Administrateur} &
+\begin{itemize}
+    \item Accès complet à toutes les fonctionnalités
+    \item Gérer les utilisateurs et rôles
+    \item Générer rapports et exports CSV/PDF
+    \item Accéder aux KPI et tableaux de bord avancés
+    \item Gérer les organisations et paramètres
+\end{itemize} &
+\begin{itemize}
+    \item Aucune restriction
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Permissions et restrictions selon les rôles utilisateurs}
+\end{table}
+
+Chaque rôle se connecte via l'interface web. Le système applique en back-end une politique pour valider chaque action selon le profil connecté.
+
+\section{Schéma de données}
+\vspace{-0.4cm}
+\subsection{Modèle de données relationnel}
+
+Le système utilise une base de données PostgreSQL avec un modèle relationnel complet. Les principales entités sont :
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|p{6.5cm}|p{6cm}|}
+\hline
+\textbf{Table} & \textbf{Principaux champs} & \textbf{Commentaires} \\
+\hline
+\texttt{users} &
+\texttt{id (PK), username, email, password\_hash, role, organization\_id, is\_approved, created\_at} &
+Gère l'authentification, le RBAC et l'audit des accès. \\
+\hline
+\texttt{bus} &
+\texttt{id (PK), immatriculation, marque, modele, capacite, statut, date\_mise\_en\_service} &
+Informations techniques et état de disponibilité des véhicules. \\
+\hline
+\texttt{destinations} &
+\texttt{id (PK), nom, ville, tarif, description} &
+Référentiel des trajets desservis par les agences. \\
+\hline
+\texttt{lignes} &
+\texttt{id (PK), nom, point\_depart, point\_arrivee, distance, duree\_estimee} &
+Définition des lignes de transport. \\
+\hline
+\texttt{ateliers} &
+\texttt{id (PK), bus\_id (FK), date\_entree, date\_sortie, motif, statut, cout, pieces\_remplacees} &
+Historique des visites des véhicules au garage. \\
+\hline
+\texttt{billets} &
+\texttt{id (PK), depart\_id (FK), nom\_client, telephone\_client, siege, montant, mode\_paiement, statut, date\_achat, qr\_code} &
+Transactions de billetterie. Un QR code peut être généré pour validation. \\
+\hline
+\texttt{chauffeurs} &
+\texttt{id (PK), nom, prenom, numero\_permis, type\_affectation, date\_embauche} &
+Informations sur les conducteurs. \\
+\hline
+\texttt{departs} &
+\texttt{id (PK), bus\_id (FK), ligne\_id (FK), destination\_id (FK), heure\_depart, heure\_arrivee\_estimee, statut, places\_disponibles} &
+Planification des trajets et départs. \\
+\hline
+\texttt{pings} &
+\texttt{id (PK), bus\_id (FK), date\_heure, statut (démarré/arrêté), latitude, longitude} &
+Pings périodiques de la flotte envoyés automatiquement. \\
+\hline
+\texttt{bus\_chauffeurs} &
+\texttt{id (PK), bus\_id (FK), chauffeur\_id (FK), date\_affectation, type\_affectation} &
+Table d'association pour les affectations bus-chauffeurs. \\
+\hline
+\texttt{roles} &
+\texttt{id (PK), nom, description} &
+Définition des rôles dans le système. \\
+\hline
+\texttt{permissions} &
+\texttt{id (PK), nom, description} &
+Définition des permissions. \\
+\hline
+\texttt{audit\_logs} &
+\texttt{id (PK), user\_id (FK), action, table\_name, record\_id, timestamp, details} &
+Journalisation de toutes les actions pour audit. \\
+\hline
+\end{tabular}
+\caption{Schéma logique de la base de données du prototype}
+\end{table}
+
+\subsection{Diagramme de cas d'utilisation}
+
+La figure~\ref{fig:use-case} présente les principaux cas d'utilisation du système selon les différents acteurs.
+
+\begin{figure}[H]
+\centering
+\resizebox{0.95\textwidth}{!}{%
+\begin{tikzpicture}[font=\small]
+    % Styles
+    \tikzset{
+        actor/.style={draw, ellipse, minimum width=3.2cm, minimum height=1.2cm, text width=3.0cm, align=center},
+        usecase/.style={draw, ellipse, minimum width=4.4cm, minimum height=1.2cm, text width=4.2cm, align=center},
+        systembox/.style={draw, rectangle, rounded corners=2pt, inner sep=10pt, fill=none}
+    }
+
+    % Acteurs (colonne gauche)
+    \node[actor] (agent) at (-6,5.5) {Agent de guichet};
+    \node[actor] (gestionnaire) at (-6,1.8) {Gestionnaire};
+    \node[actor] (maintenance) at (-6,-1.8) {Technicien Maintenance};
+    \node[actor] (admin) at (-6,-5.5) {Administrateur};
+
+    % Titre du système (sert aussi à "fit" le cadre automatiquement)
+    \node[font=\bfseries] (systemtitle) at (4,4.3) {Système de Gestion des Transports (Megane)};
+
+    % Cas d'utilisation (empilés par acteur pour éviter tout croisement)
+    % Agent (pile verticale)
+    \node[usecase] (vente) at (1.8,6.2) {Vendre billet};
+    \node[usecase] (consulter) at (1.8,4.8) {Consulter départs};
+
+    % Gestionnaire (pile verticale)
+    \node[usecase] (planifier) at (1.8,2.6) {Planifier départs};
+    \node[usecase] (affecter) at (1.8,1.2) {Affecter chauffeurs};
+    \node[usecase] (gerer) at (1.8,-0.2) {Gérer flotte};
+
+    % Maintenance (pile verticale)
+    \node[usecase] (enregistrer) at (1.8,-2.4) {Enregistrer intervention};
+    \node[usecase] (suivre) at (1.8,-3.8) {Suivre maintenance};
+
+    % Admin (pile verticale)
+    \node[usecase] (analytics) at (8.0,-5.0) {Analytics};
+    \node[usecase] (users) at (8.0,-6.4) {Gérer utilisateurs};
+
+    % Cadre du système (ajusté automatiquement autour des cas d'utilisation + titre)
+    \node[systembox, fit=(systemtitle) (vente) (consulter) (planifier) (affecter) (gerer) (enregistrer) (suivre) (analytics) (users)] (system) {};
+
+    % Relations (courtes, sans passer dans d'autres ellipses)
+    \draw[-] (agent.east) -- (vente.west);
+    \draw[-] (agent.east) -- (consulter.west);
+
+    \draw[-] (gestionnaire.east) -- (planifier.west);
+    \draw[-] (gestionnaire.east) -- (affecter.west);
+    \draw[-] (gestionnaire.east) -- (gerer.west);
+
+    \draw[-] (maintenance.east) -- (enregistrer.west);
+    \draw[-] (maintenance.east) -- (suivre.west);
+
+    \draw[-] (admin.east) -- (analytics.west);
+    \draw[-] (admin.east) -- (users.west);
+\end{tikzpicture}%
+}
+\caption{Diagramme de cas d'utilisation du système}
+\label{fig:use-case}
+\end{figure}
+
+\subsection{Diagramme de classes détaillé}
+
+La figure~\ref{fig:class-diagram} présente le modèle de données complet avec toutes les relations entre les entités.
+
+ \resizebox{0.8\textwidth}{!}{%
+\begin{tikzpicture}[font=\scriptsize]
+    %========================
+    % Classes principales (vue simplifiée)
+    %========================
+    % Ligne du haut
+    \node[draw, rectangle, minimum width=3.2cm, text width=3cm, align=left] (ligne) at (-4,4) {
+        \textbf{Ligne}\\
+        \rule{2.6cm}{0.4pt}\\
+        + id: int\\
+        + nom: str\\
+        + point\_depart: str\\
+        + point\_arrivee: str
+    };
+
+    \node[draw, rectangle, minimum width=3.2cm, text width=3cm, align=left] (destination) at (4,4) {
+        \textbf{Destination}\\
+        \rule{2.6cm}{0.4pt}\\
+        + id: int\\
+        + nom: str\\
+        + ville: str\\
+        + tarif: float
+    };
+
+    % Ligne du milieu
+    \node[draw, rectangle, minimum width=3.2cm, text width=3cm, align=left] (bus) at (-4,0) {
+        \textbf{Bus}\\
+        \rule{2.6cm}{0.4pt}\\
+        + id: int\\
+        + immatriculation: str\\
+        + capacite: int\\
+        + statut: str
+    };
+
+    \node[draw, rectangle, minimum width=3.2cm, text width=3cm, align=left] (depart) at (0,0) {
+        \textbf{Depart}\\
+        \rule{2.6cm}{0.4pt}\\
+        + id: int\\
+        + date\_depart: datetime\\
+        + places\_disponibles: int\\
+        + statut: str
+    };
+
+    \node[draw, rectangle, minimum width=3.2cm, text width=3cm, align=left] (chauffeur) at (4,0) {
+        \textbf{Chauffeur}\\
+        \rule{2.6cm}{0.4pt}\\
+        + id: int\\
+        + nom: str\\
+        + prenom: str\\
+        + numero\_permis: str
+    };
+
+    % Ligne du bas
+    \node[draw, rectangle, minimum width=3.2cm, text width=3cm, align=left] (user) at (-4,-4) {
+        \textbf{User}\\
+        \rule{2.6cm}{0.4pt}\\
+        + id: int\\
+        + username: str\\
+        + email: str\\
+        + role: str
+    };
+
+    \node[draw, rectangle, minimum width=3.2cm, text width=3cm, align=left] (billet) at (4,-4) {
+        \textbf{Billet}\\
+        \rule{2.6cm}{0.4pt}\\
+        + id: int\\
+        + siege: int\\
+        + montant: float\\
+        + mode\_paiement: str
+    };
+
+    %========================
+    % Relations (sans chevauchement)
+    %========================
+    % Ligne / Destination -> Depart
+    \draw[thick,-stealth] (ligne.south) -- node[midway, left, font=\tiny] {1..*} (bus.north);
+    \draw[thick,-stealth] (destination.south) -- node[midway, right, font=\tiny] {1..*} (depart.north);
+
+    % Bus / Chauffeur -> Depart
+    \draw[thick,-stealth] (bus.east) -- node[midway, above, font=\tiny] {1..*} (depart.west);
+    \draw[thick,-stealth] (chauffeur.west) -- node[midway, above, font=\tiny] {1..*} (depart.east);
+
+    % Depart -> Billet
+    \draw[thick,-stealth] (depart.south) -- node[midway, right, font=\tiny] {1..*} (billet.north);
+
+    % User (agent) -> Billet
+    \draw[thick,-stealth] (user.east) -- node[midway, above, font=\tiny] {1..*} (billet.west);
+\end{tikzpicture}%
+}
+\caption{Diagramme de classes - Vue simplifiée du modèle de données principal}
+\label{fig:class-diagram}
+\end{figure}
+
+\subsection{Diagramme de séquence - Vente de billet}
+
+La figure~\ref{fig:sequence-vente} illustre le processus de vente d'un billet depuis l'interface agent jusqu'à la base de données.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1.2cm,y=0.9cm,font=\scriptsize]
+    % Participants alignés horizontalement
+    \node[draw, rectangle, minimum width=2.4cm, minimum height=0.9cm] (agent) at (0,10) {Agent};
+    \node[draw, rectangle, minimum width=2.4cm, minimum height=0.9cm] (frontend) at (4,10) {Frontend};
+    \node[draw, rectangle, minimum width=2.4cm, minimum height=0.9cm] (api) at (8,10) {API};
+    \node[draw, rectangle, minimum width=2.8cm, minimum height=0.9cm, text width=2.6cm, align=center] (db) at (12,10) {Base de données};
+
+    % Lignes de vie
+    \draw[dashed, thick] (0,9.7) -- (0,1);
+    \draw[dashed, thick] (4,9.7) -- (4,1);
+    \draw[dashed, thick] (8,9.7) -- (8,1);
+    \draw[dashed, thick] (12,9.7) -- (12,1);
+
+    % Messages clairement espacés
+    % 1 et 2 : interactions Agent -> Frontend
+    \draw[->, thick] (0,9) -- (4,9) node[midway, above] {1. Sélectionne bus};
+    \draw[->, thick] (0,8) -- (4,8) node[midway, above] {2. Choisit siège};
+
+    % 3 : requête de création de billet
+    \draw[->, thick] (4,7) -- (8,7) node[midway, above] {3. POST /billets};
+
+    % 4 et 5 : vérification de disponibilité côté base
+    \draw[->, thick] (8,6) -- (12,6) node[midway, above] {4. Vérifie disponibilité};
+    \draw[->, thick] (12,5) -- (8,5) node[midway, above] {5. Résultat};
+
+    % 6 et 7 : insertion du billet et mise à jour des places
+    \draw[->, thick] (8,4) -- (12,4) node[midway, above] {6. Insère billet / met à jour places};
+    \draw[->, thick] (12,3) -- (8,3) node[midway, above] {7. OK / billet créé};
+
+    % 8 : retour vers le frontend et affichage du reçu
+    \draw[->, thick] (8,2) -- (4,2) node[midway, above] {8. Détails du billet};
+    \draw[->, thick] (4,1) -- (0,1) node[midway, above] {Affiche reçu};
+\end{tikzpicture}
+\caption{Diagramme de séquence - Processus de vente d'un billet}
+\label{fig:sequence-vente}
+\end{figure}
+
+\subsection{Diagramme d'architecture système}
+
+La figure~\ref{fig:architecture} présente l'architecture globale du système avec les différentes couches.
+
+\begin{figure}[H]
+\centering
+\resizebox{0.95\textwidth}{!}{%
+\begin{tikzpicture}[scale=1.0, transform shape]
+    % Couche Présentation
+    \node[draw, rectangle, minimum width=14cm, minimum height=2.5cm, fill=blue!20, text width=13cm, align=center] (presentation) at (0,7) {
+        \textbf{Couche Présentation}\\
+        React 19 - Interface Web | Pages, Composants, Contextes
+    };
+    
+    % Couche API
+    \node[draw, rectangle, minimum width=14cm, minimum height=2.5cm, fill=green!20, text width=13cm, align=center] (api) at (0,4) {
+        \textbf{Couche API}\\
+        FastAPI - REST API | Routes, Middleware, Authentification JWT
+    };
+    
+    % Couche Métier
+    \node[draw, rectangle, minimum width=14cm, minimum height=2.5cm, fill=yellow!20, text width=13cm, align=center] (business) at (0,1) {
+        \textbf{Couche Métier}\\
+        Logique applicative | Validation, Règles métier, RBAC
+    };
+    
+    % Couche Données
+    \node[draw, rectangle, minimum width=14cm, minimum height=2.5cm, fill=red!20, text width=13cm, align=center] (data) at (0,-2) {
+        \textbf{Couche Données}\\
+        PostgreSQL + SQLAlchemy ORM | Modèles, Relations, Transactions
+    };
+    
+    % Stockage
+    \node[draw, rectangle, minimum width=6cm, minimum height=2cm, fill=orange!20, text width=5.5cm, align=center] (minio) at (-4,-5) {
+        \textbf{MinIO}\\
+        Data Lake | Stockage objets
+    };
+    
+    % Services externes
+    \node[draw, rectangle, minimum width=6cm, minimum height=2cm, fill=purple!20, text width=5.5cm, align=center] (external) at (4,-5) {
+        \textbf{Services Externes}\\
+        Capteurs IoT | GPS, Télémétrie
+    };
+    
+    % Flèches
+    \draw[->, thick] (presentation) -- node[right, font=\small] {HTTP/REST} (api);
+    \draw[->, thick] (api) -- node[right, font=\small] {Appels} (business);
+    \draw[->, thick] (business) -- node[right, font=\small] {ORM} (data);
+    \draw[->, thick] (data) -- node[above, sloped, font=\small] {Archivage} (minio);
+    \draw[->, thick] (external) -- node[above, sloped, font=\small] {Données} (api);
+\end{tikzpicture}%
+}
+\caption{Diagramme d'architecture système - Vue en couches}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{Diagramme de déploiement}
+
+La figure~\ref{fig:deployment} présente l'architecture de déploiement avec Docker.
+
+\begin{figure}[H]
+\centering
+\resizebox{0.95\textwidth}{!}{%
+\begin{tikzpicture}[scale=1.0, transform shape]
+    % Conteneur Docker
+    \node[draw, rectangle, minimum width=16cm, minimum height=11cm, fill=gray!10, dashed] (docker) at (0,0) {};
+    \node[font=\large] at (0,4.5) {\textbf{Environnement Docker}};
+    
+    % Frontend Container
+    \node[draw, rectangle, minimum width=3.5cm, minimum height=2.5cm, fill=blue!30, text width=3.2cm, align=center] (frontend) at (-6,2) {
+        \textbf{Frontend}\\
+        React App\\
+        Port 3000
+    };
+    
+    % Backend Container
+    \node[draw, rectangle, minimum width=3.5cm, minimum height=2.5cm, fill=green!30, text width=3.2cm, align=center] (backend) at (0,2) {
+        \textbf{Backend}\\
+        FastAPI\\
+        Port 8000
+    };
+    
+    % Database Container
+    \node[draw, rectangle, minimum width=3.5cm, minimum height=2.5cm, fill=red!30, text width=3.2cm, align=center] (database) at (6,2) {
+        \textbf{PostgreSQL}\\
+        Database\\
+        Port 5432
+    };
+    
+    % MinIO Container
+    \node[draw, rectangle, minimum width=3.5cm, minimum height=2.5cm, fill=orange!30, text width=3.2cm, align=center] (minio) at (0,-2) {
+        \textbf{MinIO}\\
+        Object Storage\\
+        Ports 9000/9001
+    };
+    
+    % Volumes
+    \node[draw, rectangle, minimum width=3cm, minimum height=2cm, fill=yellow!30, text width=2.7cm, align=center] (vol1) at (-6,-2) {
+        \textbf{Volume}\\
+        Frontend\\
+        Code source
+    };
+    
+    \node[draw, rectangle, minimum width=3cm, minimum height=2cm, fill=yellow!30, text width=2.7cm, align=center] (vol2) at (6,-2) {
+        \textbf{Volume}\\
+        Database\\
+        Data persistante
+    };
+    
+    % Relations
+    \draw[->, thick] (frontend) -- node[above, font=\small] {API calls} (backend);
+    \draw[->, thick] (backend) -- node[above, font=\small] {SQL} (database);
+    \draw[->, thick] (backend) -- node[left, font=\small] {S3 API} (minio);
+    \draw[->, thick] (vol1) -- (frontend);
+    \draw[->, thick] (vol2) -- (database);
+    
+    % External
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, fill=cyan!30, text width=2.2cm, align=center] (user) at (-9,2) {
+        \textbf{Utilisateur}
+    };
+    
+    \draw[->, thick] (user) -- node[above, font=\small] {HTTP} (frontend);
+\end{tikzpicture}%
+}
+\caption{Diagramme de déploiement - Architecture Docker}
+\label{fig:deployment}
+\end{figure}
+
+\subsection{Diagramme de flux de données}
+
+La figure~\ref{fig:dataflow} illustre le flux de données dans le système, de la collecte jusqu'à la visualisation.
+
+\begin{figure}[H]
+\centering
+\resizebox{0.95\textwidth}{!}{%
+\begin{tikzpicture}[scale=1.1, transform shape]
+    % Entités externes
+    \node[draw, ellipse, minimum width=2.5cm, minimum height=1.2cm, text width=2.2cm, align=center] (capteurs) at (-7,4) {Capteurs\\IoT};
+    \node[draw, ellipse, minimum width=2.5cm, minimum height=1.2cm] (agent) at (-7,0) {Agent};
+    \node[draw, ellipse, minimum width=2.5cm, minimum height=1.2cm] (gestionnaire) at (-7,-4) {Gestionnaire};
+    
+    % Processus
+    \node[draw, rectangle, minimum width=3.5cm, minimum height=2cm, fill=blue!20, text width=3.2cm, align=center] (collecte) at (0,4) {
+        \textbf{Collecte}\\
+        Données GPS | Pings
+    };
+    
+    \node[draw, rectangle, minimum width=3.5cm, minimum height=2cm, fill=green!20, text width=3.2cm, align=center] (api) at (0,0) {
+        \textbf{API}\\
+        Traitement | Validation
+    };
+    
+    \node[draw, rectangle, minimum width=3.5cm, minimum height=2cm, fill=yellow!20, text width=3.2cm, align=center] (analytics) at (0,-4) {
+        \textbf{Analytics}\\
+        Calcul KPI | Statistiques
+    };
+    
+    % Stockage
+    \node[draw, rectangle, minimum width=3cm, minimum height=2.5cm, fill=red!20, text width=2.7cm, align=center] (db) at (6,2) {
+        \textbf{PostgreSQL}\\
+        Base de données
+    };
+    
+    \node[draw, rectangle, minimum width=3cm, minimum height=2cm, fill=orange!20, text width=2.7cm, align=center] (minio) at (6,-2) {
+        \textbf{MinIO}\\
+        Data Lake
+    };
+    
+    % Visualisation
+    \node[draw, rectangle, minimum width=3.5cm, minimum height=2cm, fill=purple!20, text width=3.2cm, align=center] (dashboard) at (12,0) {
+        \textbf{Dashboard}\\
+        Visualisation | Rapports
+    };
+    
+    % Flèches
+    \draw[->, thick] (capteurs) -- node[above, font=\small] {Données télémétriques} (collecte);
+    \draw[->, thick] (agent) -- node[above, font=\small] {Vente billet} (api);
+    \draw[->, thick] (gestionnaire) -- node[above, font=\small] {Planification} (api);
+    
+    \draw[->, thick] (collecte) -- node[above, font=\small] {Données validées} (db);
+    \draw[->, thick] (api) -- node[above, font=\small] {Transactions} (db);
+    \draw[->, thick] (analytics) -- node[above, font=\small] {Résultats} (db);
+    
+    \draw[->, thick] (db) -- node[above, sloped, font=\small] {Archivage} (minio);
+    \draw[->, thick] (db) -- node[above, font=\small] {Données} (dashboard);
+    \draw[->, thick] (analytics) -- node[above, font=\small] {KPI} (dashboard);
+    
+    \draw[->, thick] (db) -- node[left, font=\small] {Lecture} (analytics);
+\end{tikzpicture}%
+}
+\caption{Diagramme de flux de données}
+\label{fig:dataflow}
+\end{figure}
+
+\subsection{Diagramme d'activité - Processus de vente de billet}
+
+La figure~\ref{fig:activity} décrit le processus complet de vente d'un billet.
+
+\begin{figure}[H]
+\centering
+\resizebox{0.85\textwidth}{!}{%
+\begin{tikzpicture}[scale=1.0, transform shape, node distance=1.8cm, font=\small]
+    % Début
+    \node[draw, circle, fill=green!30, minimum size=0.8cm] (start) at (0,9) {};
+    \node[font=\tiny] at (0,8.5) {Début};
+    
+    % Activités - mieux espacées
+    \node[draw, rectangle, minimum width=4cm, minimum height=1.2cm, text width=3.7cm, align=center] (login) at (0,7) {Agent se connecte};
+    \node[draw, rectangle, minimum width=4cm, minimum height=1.2cm, text width=3.7cm, align=center] (select) at (0,5) {Sélectionne bus/destination};
+    \node[draw, rectangle, minimum width=4cm, minimum height=1.2cm, text width=3.7cm, align=center] (check) at (0,3) {Vérifie places disponibles};
+    
+    % Décision - plus grande
+    \node[draw, diamond, minimum width=2.5cm, minimum height=2cm, text width=2.2cm, align=center] (decision) at (0,1) {Places\\disponibles?};
+    
+    % Activités suite - mieux espacées
+    \node[draw, rectangle, minimum width=4cm, minimum height=1.2cm, text width=3.7cm, align=center] (choose) at (-4,-1) {Choisit siège};
+    \node[draw, rectangle, minimum width=4cm, minimum height=1.2cm, text width=3.7cm, align=center] (info) at (-4,-3) {Saisit infos client};
+    \node[draw, rectangle, minimum width=4cm, minimum height=1.2cm, text width=3.7cm, align=center] (payment) at (-4,-5) {Sélectionne paiement};
+    \node[draw, rectangle, minimum width=4cm, minimum height=1.2cm, text width=3.7cm, align=center] (create) at (-4,-7) {Crée billet};
+    \node[draw, rectangle, minimum width=4cm, minimum height=1.2cm, text width=3.7cm, align=center] (update) at (-4,-9) {Met à jour places};
+    \node[draw, rectangle, minimum width=4cm, minimum height=1.2cm, text width=3.7cm, align=center] (receipt) at (-4,-11) {Génère reçu};
+    
+    % Fin
+    \node[draw, circle, fill=red!30, minimum size=0.8cm] (end) at (-4,-13) {};
+    \node[font=\tiny] at (-4,-13.5) {Fin};
+    
+    % Message d'erreur
+    \node[draw, rectangle, minimum width=4cm, minimum height=1.2cm, text width=3.7cm, align=center] (error) at (4,-1) {Affiche erreur};
+    \node[draw, circle, fill=red!30, minimum size=0.8cm] (end2) at (4,-3) {};
+    \node[font=\tiny] at (4,-3.5) {Fin};
+    
+    % Flèches
+    \draw[->, thick] (start) -- (login);
+    \draw[->, thick] (login) -- (select);
+    \draw[->, thick] (select) -- (check);
+    \draw[->, thick] (check) -- (decision);
+    \draw[->, thick] (decision) -- node[left, font=\tiny] {Oui} (choose);
+    \draw[->, thick] (decision) -- node[above, font=\tiny] {Non} (error);
+    \draw[->, thick] (choose) -- (info);
+    \draw[->, thick] (info) -- (payment);
+    \draw[->, thick] (payment) -- (create);
+    \draw[->, thick] (create) -- (update);
+    \draw[->, thick] (update) -- (receipt);
+    \draw[->, thick] (receipt) -- (end);
+    \draw[->, thick] (error) -- (end2);
+\end{tikzpicture}%
+}
+\caption{Diagramme d'activité - Processus de vente de billet}
+\label{fig:activity}
+\end{figure}
+
+\subsection{Diagramme de composants}
+
+La figure~\ref{fig:components} présente l'architecture des composants logiciels du système.
+
+\begin{figure}[H]
+\centering
+\resizebox{0.95\textwidth}{!}{%
+\begin{tikzpicture}[scale=1.0, transform shape, font=\small]
+    % Composant Frontend
+    \node[draw, rectangle, minimum width=4.5cm, minimum height=3.5cm, fill=blue!20, text width=4.2cm, align=left] (frontend) at (-5.5,0) {
+        \textbf{Composant Frontend}\\
+        \rule{4cm}{0.5pt}\\
+        \textit{Pages}: Dashboard, VenteBillet, GestionDeparts\\
+        \rule{4cm}{0.5pt}\\
+        \textit{Components}: Navbar, Card, DataTable\\
+        \rule{4cm}{0.5pt}\\
+        \textit{Context}: AuthContext
+    };
+    
+    % Composant Backend API
+    \node[draw, rectangle, minimum width=4.5cm, minimum height=3.5cm, fill=green!20, text width=4.2cm, align=left] (api) at (0,0) {
+        \textbf{Composant API}\\
+        \rule{4cm}{0.5pt}\\
+        \textit{Routes}: /auth, /billets, /departs, /bus, /analytics\\
+        \rule{4cm}{0.5pt}\\
+        \textit{Middleware}: JWT Auth, RBAC, CORS\\
+        \rule{4cm}{0.5pt}\\
+        \textit{Schemas}: Pydantic
+    };
+    
+    % Composant Modèles
+    \node[draw, rectangle, minimum width=4.5cm, minimum height=3.5cm, fill=yellow!20, text width=4.2cm, align=left] (models) at (5.5,0) {
+        \textbf{Composant Modèles}\\
+        \rule{4cm}{0.5pt}\\
+        \textit{SQLAlchemy}: User, Bus, Billet, Depart, Chauffeur, Atelier\\
+        \rule{4cm}{0.5pt}\\
+        \textit{Relations}: Foreign Keys, Relationships
+    };
+    
+    % Base de données
+    \node[draw, rectangle, minimum width=4cm, minimum height=2.5cm, fill=red!20, text width=3.7cm, align=center] (db) at (0,-4.5) {
+        \textbf{PostgreSQL}\\
+        Base de données\\
+        relationnelle
+    };
+    
+    % Interfaces
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, fill=cyan!20, text width=2.2cm, align=center] (user) at (-8.5,0) {
+        \textbf{Utilisateur}
+    };
+    
+    % Flèches
+    \draw[->, thick] (user) -- node[above, font=\small] {HTTP} (frontend);
+    \draw[->, thick] (frontend) -- node[above, font=\small] {REST API} (api);
+    \draw[->, thick] (api) -- node[above, font=\small] {ORM} (models);
+    \draw[->, thick] (models) -- node[right, font=\small] {SQL} (db);
+    \draw[->, thick] (api) -- node[left, font=\small] {Direct} (db);
+\end{tikzpicture}%
+}
+\caption{Diagramme de composants - Architecture logicielle}
+\label{fig:components}
+\end{figure}
+
+\section{Architecture technique implémentée}
+
+\subsection{Structure du projet}
+
+Le projet Megane est organisé selon une architecture modulaire claire. La structure principale comprend :
+
+\begin{itemize}
+    \item \textbf{backend/} : API FastAPI avec sous-dossiers pour l'authentification JWT, les modèles SQLAlchemy, les routes API, les schémas Pydantic, et le middleware personnalisé.
+    \item \textbf{frontend/} : Application React avec organisation en pages, composants réutilisables, contextes React et utilitaires.
+    \item \textbf{database/} : Volume Docker pour la persistance des données PostgreSQL.
+    \item \textbf{ingestion\_pipeline/} : Pipeline d'ingestion de données pour les pings GPS.
+    \item \textbf{docker-compose.yml} : Configuration Docker pour l'orchestration de tous les services.
+\end{itemize}
+
+\subsection{Backend - API FastAPI}
+
+\subsubsection{Configuration de la base de données}
+
+Le backend utilise SQLAlchemy comme ORM pour interagir avec PostgreSQL. La configuration de la connexion est flexible, supportant à la fois les environnements Docker et locaux. Les paramètres de connexion (hôte, utilisateur, mot de passe, nom de base, port) sont configurés via des variables d'environnement, permettant une adaptation facile selon l'environnement de déploiement. Le moteur SQLAlchemy est configuré avec un pool de connexions optimisé (15 connexions de base, 25 en overflow) et des mécanismes de récupération automatique en cas de perte de connexion.
+
+\subsubsection{Authentification et sécurité}
+
+Le système implémente une authentification JWT complète avec gestion des rôles et permissions :
+
+\begin{itemize}
+    \item \textbf{JWT (JSON Web Token)} : sécurisation des échanges via tokens signés
+    \item \textbf{RBAC (Role-Based Access Control)} : gestion des permissions selon le rôle
+    \item \textbf{Middleware de protection} : validation automatique des tokens sur les routes protégées
+    \item \textbf{Audit logging} : journalisation de toutes les actions pour traçabilité
+\end{itemize}
+
+\subsubsection{Routes API principales}
+
+Le backend expose une API REST complète avec les endpoints suivants :
+
+\begin{itemize}
+    \item \texttt{/auth/*} : Authentification (login, register, refresh token)
+    \item \texttt{/users/*} : Gestion des utilisateurs
+    \item \texttt{/bus/*} : Gestion de la flotte de bus
+    \item \texttt{/lignes/*} : Gestion des lignes de transport
+    \item \texttt{/destinations/*} : Gestion des destinations
+    \item \texttt{/billets/*} : Gestion de la billetterie
+    \item \texttt{/departs/*} : Gestion des départs et trajets
+    \item \texttt{/chauffeurs/*} : Gestion des chauffeurs
+    \item \texttt{/ateliers/*} : Gestion de la maintenance
+    \item \texttt{/pings/*} : Réception des pings de suivi
+    \item \texttt{/analytics/*} : Analytics et statistiques
+    \item \texttt{/analytics/detail/*} : Analyses détaillées
+\end{itemize}
+
+\subsection{Frontend - Application React}
+
+\subsubsection{Architecture React}
+
+L'application frontend est construite avec React 19 et utilise une architecture modulaire :
+
+\begin{itemize}
+    \item \textbf{Pages} : Composants de page pour chaque vue de l'application
+    \item \textbf{Components} : Composants réutilisables (Card, Navbar, DataTable, etc.)
+    \item \textbf{Context} : Gestion de l'état global (AuthContext pour l'authentification)
+    \item \textbf{Utils} : Fonctions utilitaires (formatage de prix, traductions)
+\end{itemize}
+
+\subsubsection{Routage et protection des routes}
+
+Le système de routage utilise React Router avec une protection basée sur les rôles. Chaque route est protégée par un composant \texttt{ProtectedRoute} qui vérifie que l'utilisateur connecté possède le rôle requis et la permission nécessaire pour accéder à la page. Les rôles autorisés sont définis pour chaque route (admin, gestionnaire, maintenance, agent) et le système redirige automatiquement vers la page de connexion si l'utilisateur n'est pas autorisé.
+
+\subsubsection{Interfaces par rôle}
+
+\textbf{Agent de guichet} :
+\begin{itemize}
+    \item Page de vente de billets avec sélection de bus, destination et siège
+    \item Consultation des départs disponibles
+    \item Tableau de bord avec statistiques de vente
+\end{itemize}
+
+\textbf{Gestionnaire} :
+\begin{itemize}
+    \item Gestion complète des bus, lignes, destinations
+    \item Planification des départs avec affectation bus/chauffeur
+    \item Gestion des chauffeurs et assignations
+    \item Tableau de bord avec vue d'ensemble opérationnelle
+\end{itemize}
+
+\textbf{Maintenance} :
+\begin{itemize}
+    \item Suivi de la flotte et état des véhicules
+    \item Enregistrement des interventions
+    \item Suivi des interventions en cours
+    \item Tableau de bord maintenance
+\end{itemize}
+
+\textbf{Administrateur} :
+\begin{itemize}
+    \item Accès complet à toutes les fonctionnalités
+    \item Gestion des utilisateurs et approbations
+    \item Tableaux de bord avancés avec analytics
+    \item Exports de données
+\end{itemize}
+
+\section{Déploiement avec Docker}
+
+\subsection{Configuration Docker Compose}
+
+Le système est entièrement conteneurisé avec Docker Compose, permettant un déploiement simple et reproductible :
+
+La configuration comprend quatre services principaux : le service frontend (React sur le port 3000), le service backend (FastAPI sur le port 8000), le service database (PostgreSQL sur le port 5432 avec volume persistant), et le service minio (stockage objet sur les ports 9000 et 9001). Les dépendances entre services sont gérées via \texttt{depends\_on}, garantissant l'ordre de démarrage correct.
+
+\subsection{Avantages de la conteneurisation}
+
+\begin{itemize}
+    \item \textbf{Reproductibilité} : Environnement identique en développement et production
+    \item \textbf{Isolation} : Chaque service fonctionne dans son propre conteneur
+    \item \textbf{Scalabilité} : Facilite la montée en charge
+    \item \textbf{Simplicité de déploiement} : Une seule commande pour démarrer tous les services
+\end{itemize}
+
+\section{Fonctionnalités implémentées}
+
+\subsection{Module de billetterie}
+
+Le module de billetterie permet :
+\begin{itemize}
+    \item La vente de billets avec sélection interactive des sièges
+    \item Le suivi en temps réel de la disponibilité des places
+    \item La gestion des modes de paiement (espèces, carte, mobile-money)
+    \item La consultation de l'historique des ventes avec filtres avancés
+    \item La génération de statistiques de vente par agent, bus ou destination
+\end{itemize}
+
+\subsection{Module de gestion de flotte}
+
+Le module de gestion de flotte inclut :
+\begin{itemize}
+    \item L'enregistrement complet des véhicules avec leurs caractéristiques
+    \item Le suivi en temps réel du statut de chaque bus
+    \item La visualisation des bus en service, en maintenance ou hors service
+    \item L'historique des pings et positions GPS
+    \item Les détails complets par bus avec statistiques d'utilisation
+\end{itemize}
+
+\subsection{Module de planification}
+
+Le module de planification offre :
+\begin{itemize}
+    \item La création et gestion des départs avec affectation bus/chauffeur
+    \item La génération automatique de départs futurs selon des règles
+    \item Le suivi en temps réel de l'état des trajets
+    \item La consultation des départs par date avec filtres
+    \item La gestion des assignations de chauffeurs aux bus
+\end{itemize}
+
+\subsection{Module de maintenance}
+
+Le module de maintenance comprend :
+\begin{itemize}
+    \item L'enregistrement des passages en atelier (entrée/sortie)
+    \item Le suivi des interventions avec détails (motif, gravité, coût)
+    \item La visualisation des bus en maintenance
+    \item Le suivi des interventions en cours
+    \item L'historique complet des maintenances par bus
+\end{itemize}
+
+\subsection{Module d'analytics}
+
+Le module d'analytics fournit :
+\begin{itemize}
+    \item Des tableaux de bord personnalisés par rôle
+    \item Des analyses de chiffre d'affaires avec graphiques temporels
+    \item Des statistiques de ventes de billets
+    \item Des analyses détaillées des trajets par jour
+    \item Des indicateurs de performance (KPI) en temps réel
+\end{itemize}
+
+\chapter{Perspectives d'évolution : Module IA pour l'analyse comportementale}
+
+\section{Contexte et motivation}
+
+Comme présenté dans les chapitres précédents, l'analyse du comportement des chauffeurs représente un enjeu majeur pour améliorer la sécurité, réduire les coûts opérationnels et optimiser la qualité de service. Le système actuel collecte déjà de nombreuses données pertinentes (pings GPS, statuts des bus, données de maintenance) qui peuvent servir de base à l'implémentation d'un module d'intelligence artificielle dédié.
+
+\section{Architecture proposée pour le module IA}
+
+\subsection{Collecte de données enrichies}
+
+Pour alimenter le module IA, il sera nécessaire d'enrichir la collecte de données avec :
+\begin{itemize}
+    \item \textbf{Données télémétriques avancées} : accélérations, freinages, vitesses, trajectoires GPS détaillées
+    \item \textbf{Données mécaniques} : température moteur, vibrations, niveau de carburant, pression des pneus
+    \item \textbf{Données contextuelles} : conditions météorologiques, état du trafic, horaires
+    \item \textbf{Données vidéo} : caméras embarquées pour l'analyse comportementale par vision par ordinateur
+\end{itemize}
+
+\subsection{Architecture modulaire}
+
+Le module IA sera conçu comme un service indépendant, accessible via API REST, suivant l'architecture modulaire du système :
+
+\begin{itemize}
+    \item \textbf{Service de détection de comportements à risque} : Classification des événements dangereux
+    \item \textbf{Service d'optimisation énergétique} : Recommandations d'éco-conduite en temps réel
+    \item \textbf{Service de maintenance prédictive} : Prédiction des pannes et besoins de maintenance
+    \item \textbf{Service d'analyse vidéo} : Traitement des flux vidéo pour détection de fatigue et d'inattention
+\end{itemize}
+
+\subsection{Technologies envisagées}
+
+\begin{itemize}
+    \item \textbf{Apprentissage automatique} : Scikit-learn, XGBoost pour la classification et la régression
+    \item \textbf{Deep Learning} : PyTorch ou TensorFlow pour les réseaux neuronaux
+    \item \textbf{Vision par ordinateur} : OpenCV, YOLO pour l'analyse vidéo
+    \item \textbf{Traitement de séries temporelles} : LSTM, GRU pour l'analyse temporelle
+    \item \textbf{Stockage de données} : TimescaleDB pour les données temporelles, MinIO pour les vidéos
+\end{itemize}
+
+\section{Algorithmes et approches}
+
+\subsection{Détection de comportements à risque}
+
+Pour la détection de comportements à risque, plusieurs approches peuvent être combinées :
+
+\begin{itemize}
+    \item \textbf{Classification supervisée} : Forêts aléatoires ou XGBoost entraînés sur des données historiques d'accidents et d'incidents
+    \item \textbf{Détection d'anomalies} : Isolation Forest ou Autoencoders pour identifier des patterns anormaux
+    \item \textbf{Règles métier} : Seuils définis sur les accélérations, freinages et vitesses
+\end{itemize}
+
+\subsection{Analyse vidéo pour détection de fatigue}
+
+L'analyse vidéo permettra de détecter :
+\begin{itemize}
+    \item \textbf{Fatigue} : Analyse des clignements d'yeux, bâillements, mouvements de tête
+    \item \textbf{Inattention} : Détection de la direction du regard, utilisation du téléphone
+    \item \textbf{Posture} : Analyse de la position du conducteur
+\end{itemize}
+
+Technologies : YOLO pour la détection d'objets, MediaPipe pour l'analyse faciale, réseaux de neurones convolutifs pour la classification.
+
+\subsection{Optimisation énergétique}
+
+Pour l'optimisation de la consommation :
+\begin{itemize}
+    \item \textbf{Modèles prédictifs} : LSTM pour prédire la consommation selon les conditions
+    \item \textbf{Recommandations en temps réel} : Système de scoring et d'alertes pour l'éco-conduite
+    \item \textbf{Analyse comparative} : Comparaison des performances entre chauffeurs
+\end{itemize}
+
+\subsection{Maintenance prédictive}
+
+Pour la maintenance prédictive :
+\begin{itemize}
+    \item \textbf{Analyse des signaux mécaniques} : Détection d'anomalies dans les vibrations, températures
+    \item \textbf{Prédiction de pannes} : Modèles de séries temporelles pour anticiper les défaillances
+    \item \textbf{Planification optimale} : Optimisation des calendriers de maintenance
+\end{itemize}
+
+\section{Intégration avec le système existant}
+
+\subsection{API d'intégration}
+
+Le module IA exposera des endpoints REST pour :
+\begin{itemize}
+    \item \texttt{POST /ai/analyze-behavior} : Analyse comportementale en temps réel
+    \item \texttt{POST /ai/detect-fatigue} : Détection de fatigue à partir de vidéo
+    \item \texttt{GET /ai/driver-score/{driver\_id}} : Score de performance d'un chauffeur
+    \item \texttt{GET /ai/predictive-maintenance/{bus\_id}} : Prédictions de maintenance
+\end{itemize}
+
+\subsection{Workflow de traitement}
+
+\begin{enumerate}
+    \item Collecte des données depuis les capteurs et caméras
+    \item Préprocessing et validation des données
+    \item Traitement par les modèles IA
+    \item Génération d'alertes et recommandations
+    \item Stockage des résultats et métriques
+    \item Affichage dans les tableaux de bord
+\end{enumerate}
+
+\section{Métriques et évaluation}
+
+Pour évaluer l'efficacité du module IA, plusieurs métriques seront suivies :
+
+\begin{itemize}
+    \item \textbf{Précision de détection} : Taux de vrais positifs et faux positifs pour les comportements à risque
+    \item \textbf{Réduction des accidents} : Nombre d'accidents évités grâce aux alertes
+    \item \textbf{Économies d'énergie} : Pourcentage de réduction de consommation de carburant
+    \item \textbf{Précision de maintenance} : Taux de prédictions correctes de pannes
+    \item \textbf{Satisfaction utilisateurs} : Feedback des chauffeurs et gestionnaires
+\end{itemize}
+
+\chapter{Conclusion et perspectives}
+
+\section{Bilan du travail réalisé}
+
+Ce mémoire a présenté la conception, le développement et l'implémentation d'un système intelligent de gestion des transports collectifs. Le prototype développé intègre les fonctionnalités essentielles pour la gestion opérationnelle d'une entreprise de transport :
+
+\begin{itemize}
+    \item Un système complet de billetterie avec gestion des sièges et des paiements
+    \item Une gestion de flotte avec suivi en temps réel des véhicules
+    \item Un module de planification des trajets avec affectation bus/chauffeurs
+    \item Un système de maintenance avec suivi des interventions
+    \item Des tableaux de bord analytics avec visualisations interactives
+    \item Une architecture modulaire et évolutive basée sur Docker
+\end{itemize}
+
+L'architecture technique retenue (FastAPI + React + PostgreSQL + Docker) s'est révélée adaptée aux besoins, offrant performance, scalabilité et facilité de déploiement.
+
+\section{Contributions principales}
+
+Les contributions principales de ce travail sont :
+
+\begin{enumerate}
+    \item \textbf{Architecture modulaire} : Conception d'une architecture flexible permettant l'intégration progressive de nouveaux modules, notamment le module IA prévu
+    \item \textbf{Système complet opérationnel} : Développement d'un prototype fonctionnel couvrant l'ensemble du cycle opérationnel d'une entreprise de transport
+    \item \textbf{Sécurité et audit} : Implémentation d'un système robuste d'authentification, d'autorisation et d'audit
+    \item \textbf{Analytics avancés} : Mise en place d'un système d'analytics permettant des analyses détaillées et des tableaux de bord personnalisés
+\end{enumerate}
+
+\section{Perspectives d'évolution}
+
+\subsection{Module IA d'analyse comportementale}
+
+Comme présenté dans le chapitre précédent, l'évolution principale consistera en l'intégration d'un module d'intelligence artificielle pour l'analyse comportementale des chauffeurs. Ce module permettra :
+
+\begin{itemize}
+    \item La détection automatique de comportements à risque
+    \item L'analyse vidéo pour la détection de fatigue et d'inattention
+    \item L'optimisation de la consommation énergétique
+    \item La maintenance prédictive des véhicules
+\end{itemize}
+
+\subsection{Améliorations fonctionnelles}
+
+D'autres améliorations sont envisagées :
+
+\begin{itemize}
+    \item \textbf{Application mobile} : Développement d'une application mobile pour les chauffeurs et les passagers
+    \item \textbf{Information voyageurs en temps réel} : Système d'affichage dynamique aux arrêts
+    \item \textbf{Optimisation des itinéraires} : Algorithmes d'optimisation pour la planification des trajets
+    \item \textbf{Intégration IoT avancée} : Connexion directe avec les capteurs embarqués
+\end{itemize}
+
+\subsection{Améliorations techniques}
+
+\begin{itemize}
+    \item \textbf{Performance} : Optimisation des requêtes et mise en cache
+    \item \textbf{Scalabilité} : Architecture microservices pour la montée en charge
+    \item \textbf{Monitoring} : Intégration d'outils de monitoring et d'alerting
+    \item \textbf{Tests} : Couverture de tests automatisés plus complète
+\end{itemize}
+
+\section{Conclusion finale}
+
+Ce travail a permis de démontrer la faisabilité et l'intérêt d'un système intelligent de gestion des transports collectifs. Le prototype développé constitue une base solide pour l'évolution vers un système complet intégrant l'intelligence artificielle pour l'analyse comportementale des chauffeurs.
+
+L'approche modulaire adoptée facilite l'intégration progressive de nouvelles fonctionnalités et permet une adaptation aux besoins spécifiques de chaque entreprise de transport. Les technologies choisies (FastAPI, React, PostgreSQL, Docker) offrent un bon équilibre entre performance, maintenabilité et facilité de déploiement.
+
+L'évolution vers un système intégrant l'IA pour l'analyse comportementale représente la prochaine étape logique, permettant d'apporter une valeur ajoutée significative en termes de sécurité, d'efficacité opérationnelle et de qualité de service.
+
+\appendix
+
+\chapter{Annexes}
+
+\section{Structure complète du projet}
+
+\section{Exemples de code}
+
+\section{Schémas de base de données détaillés}
+
+\section{Documentation API}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

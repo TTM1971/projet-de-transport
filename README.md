@@ -28,16 +28,9 @@ Cette commande va :
 - ✅ Démarrer PostgreSQL (port 5432)
 - ✅ Démarrer MinIO (ports 9000, 9001)
 - ✅ Construire et démarrer le backend FastAPI (port 8000)
+- ✅ Construire et démarrer le frontend React (port 3000)
 
-### 2. Démarrer le frontend (dans un nouveau terminal)
-
-```bash
-cd frontend
-npm install
-npm start
-```
-
-Le frontend sera accessible sur : **http://localhost:3000**
+**Note** : Le frontend est maintenant géré par Docker ! Plus besoin de le démarrer séparément.
 
 ### 3. Accéder aux services
 
