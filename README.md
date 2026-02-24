@@ -2,7 +2,7 @@
 
 Application web de gestion de transport collectif avec billetterie, suivi de flotte et gestion d'atelier.
 <img width="1299" height="592" alt="image" src="https://github.com/user-attachments/assets/a99c9455-625c-4161-8fcd-b54eefce4dbe" />
-<img width="1299" height="592" alt="image" src="https://github.com/user-attachments/assets/a99c9455-625c-4161-8fcd-b54eefce4dbe" />
+
 
 ##  Prérequis
 
