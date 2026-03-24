@@ -3,8 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Card from '../components/Card';
 import { formatApiError } from '../utils/apiError';
-const API_URL = 'http://localhost:8000';
-
+import API_URL from '../config/api';
 export default function UserApproval() {
   const { user } = useAuth();
   const [pendingUsers, setPendingUsers] = useState([]);

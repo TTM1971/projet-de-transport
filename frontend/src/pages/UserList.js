@@ -5,8 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import DataTable from '../components/DataTable';
 import Card from '../components/Card';
 import BackButton from '../components/BackButton';
-
-const API_URL = 'http://localhost:8000';
+import API_URL from '../config/api';
 
 export default function UserList() {
   const location = useLocation();

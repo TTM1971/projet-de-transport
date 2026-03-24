@@ -4,7 +4,7 @@ import os
 os.environ.setdefault("PGCLIENTENCODING", "UTF8")
 
 from sqlalchemy import create_engine
-from sqlalchemy.engine.url import URL
+from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -46,23 +46,21 @@ def _build_database_url() -> URL:
     )
 
 
-def _database_url_string() -> str:
+def _resolve_engine_url() -> URL:
     """
-    Chaîne SQLAlchemy pour create_engine.
-    Si DATABASE_URL est défini (hébergeurs type Railway, Render, Neon), on l'adapte au pilote actif.
+    URL SQLAlchemy pour create_engine.
+    Ne pas utiliser str(URL) : SQLAlchemy 2 masque le mot de passe (***), ce qui casse la connexion.
+    Si DATABASE_URL est défini (Railway, Render, Neon, etc.), on l'adapte au pilote actif.
     """
     raw = (os.getenv("DATABASE_URL") or "").strip()
     if not raw:
-        return str(_build_database_url())
+        return _build_database_url()
     u = raw.replace("postgres://", "postgresql://", 1)
     if u.startswith("postgresql://"):
         u = f"{_PSYCOPG_DRIVER}://" + u[len("postgresql://") :]
     elif not u.startswith(f"{_PSYCOPG_DRIVER}://"):
         u = f"{_PSYCOPG_DRIVER}://" + u
-    return u
-
-
-DATABASE_URL = _database_url_string()
+    return make_url(u)
 
 # SSL (obligatoire sur beaucoup de PostgreSQL managés) : PGSSLMODE=require|verify-full|prefer|disable
 _PG_SSLMODE = (os.getenv("PGSSLMODE") or "").strip()
@@ -86,7 +84,7 @@ if _PG_SSLMODE:
     _CONNECT_ARGS["sslmode"] = _PG_SSLMODE
 
 engine = create_engine(
-    DATABASE_URL,
+    _resolve_engine_url(),
     pool_size=15,
     max_overflow=25,
     pool_pre_ping=True,

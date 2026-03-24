@@ -8,7 +8,11 @@ from models.billet import Billet as BilletModel
 from models.depart import Depart as DepartModel
 from models.ligne import Ligne as LigneModel
 from datetime import datetime
-from middleware.dependencies import get_current_user, require_agent_or_admin, require_gestionnaire_or_admin
+from middleware.dependencies import (
+    get_current_user,
+    agent_or_admin_only,
+    gestionnaire_or_admin_only,
+)
 import uuid
 
 router = APIRouter()
@@ -77,7 +81,7 @@ def get_billet(billet_id: int, db: Session = Depends(get_db), current_user = Dep
     return billet
 
 @router.post("/", response_model=Billet)
-def create_billet(billet: BilletCreate, db: Session = Depends(get_db), current_user = Depends(require_agent_or_admin)):
+def create_billet(billet: BilletCreate, db: Session = Depends(get_db), current_user = Depends(agent_or_admin_only)):
     import logging
     logger = logging.getLogger(__name__)
     
@@ -195,7 +199,7 @@ def update_billet(billet_id: int, billet_update: BilletUpdate, db: Session = Dep
     return db_billet
 
 @router.delete("/{billet_id}")
-def delete_billet(billet_id: int, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+def delete_billet(billet_id: int, db: Session = Depends(get_db), current_user = Depends(gestionnaire_or_admin_only)):
     db_billet = db.query(BilletModel).filter(BilletModel.id == billet_id).first()
     if not db_billet:
         raise HTTPException(status_code=404, detail="Billet non trouvé")

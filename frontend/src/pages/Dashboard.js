@@ -6,7 +6,7 @@ import StatsWidget from '../components/StatsWidget';
 import Card from '../components/Card';
 import DashboardAdmin from '../components/DashboardAdmin';
 import { formatPrice } from '../utils/currency';
-const API_URL = 'http://localhost:8000';
+import API_URL from '../config/api';
 
 export default function Dashboard() {
   const { user } = useAuth();

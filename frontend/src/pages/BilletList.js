@@ -5,8 +5,7 @@ import axios from 'axios';
 import DataTable from '../components/DataTable';
 import Card from '../components/Card';
 import { formatPrice } from '../utils/currency';
-
-const API_URL = 'http://localhost:8000';
+import API_URL from '../config/api';
 
 export default function BilletList() {
   const location = useLocation();

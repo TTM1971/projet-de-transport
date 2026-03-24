@@ -17,7 +17,7 @@ from models.user import User as UserModel
 from models.ligne import Ligne as LigneModel
 from models.destination import Destination as DestinationModel
 from models.bus_chauffeur import BusChauffeur as BusChauffeurModel
-from middleware.dependencies import require_admin, require_gestionnaire_or_admin
+from middleware.dependencies import admin_only
 
 router = APIRouter()
 
@@ -57,7 +57,7 @@ def get_chiffre_affaires_par_jour(
     start_date: Optional[str] = Query(None, description="Date de début (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="Date de fin (YYYY-MM-DD)"),
     db: Session = Depends(get_db),
-    current_user = Depends(require_admin)
+    current_user = Depends(admin_only)
 ):
     """
     Retourne le chiffre d'affaires par jour avec tous les détails
@@ -313,7 +313,7 @@ def get_billets_par_jour(
     start_date: Optional[str] = Query(None, description="Date de début (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="Date de fin (YYYY-MM-DD)"),
     db: Session = Depends(get_db),
-    current_user = Depends(require_admin)
+    current_user = Depends(admin_only)
 ):
     """
     Retourne le nombre de billets vendus par jour avec détails
@@ -331,7 +331,7 @@ def get_billets_par_jour(
 def get_trajets_du_jour(
     date_str: str,
     db: Session = Depends(get_db),
-    current_user = Depends(require_admin)
+    current_user = Depends(admin_only)
 ):
     """
     Retourne tous les trajets d'un jour spécifique avec tous les détails

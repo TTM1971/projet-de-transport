@@ -5,7 +5,7 @@ from typing import List
 from database import get_db
 from models.destination import Destination as DestinationModel
 from schemas.destination import DestinationCreate, DestinationUpdate, Destination as DestinationSchema
-from middleware.dependencies import get_current_user, require_gestionnaire_or_admin
+from middleware.dependencies import get_current_user, gestionnaire_or_admin_only
 
 router = APIRouter()
 
@@ -53,7 +53,7 @@ def get_destination(dest_id: int, db: Session = Depends(get_db), current_user=De
     return destination
 
 @router.post("/", response_model=DestinationSchema)
-def create_destination(destination: DestinationCreate, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+def create_destination(destination: DestinationCreate, db: Session = Depends(get_db), current_user = Depends(gestionnaire_or_admin_only)):
     # Validation du nom
     if not destination.nom or not destination.nom.strip():
         raise HTTPException(status_code=400, detail="Le nom de la destination est obligatoire")
@@ -87,7 +87,7 @@ def create_destination(destination: DestinationCreate, db: Session = Depends(get
     return db_destination
 
 @router.put("/{dest_id}", response_model=DestinationSchema)
-def update_destination(dest_id: int, dest_update: DestinationUpdate, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+def update_destination(dest_id: int, dest_update: DestinationUpdate, db: Session = Depends(get_db), current_user = Depends(gestionnaire_or_admin_only)):
     db_destination = db.query(DestinationModel).filter(DestinationModel.id == dest_id).first()
     if not db_destination:
         raise HTTPException(status_code=404, detail="Destination non trouvée")
@@ -127,7 +127,7 @@ def update_destination(dest_id: int, dest_update: DestinationUpdate, db: Session
     return db_destination
 
 @router.delete("/{dest_id}")
-def delete_destination(dest_id: int, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+def delete_destination(dest_id: int, db: Session = Depends(get_db), current_user = Depends(gestionnaire_or_admin_only)):
     db_destination = db.query(DestinationModel).filter(DestinationModel.id == dest_id).first()
     if not db_destination:
         raise HTTPException(status_code=404, detail="Destination non trouvée")

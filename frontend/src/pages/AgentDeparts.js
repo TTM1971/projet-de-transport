@@ -5,8 +5,7 @@ import Card from '../components/Card';
 import DataTable from '../components/DataTable';
 import BackButton from '../components/BackButton';
 import { formatPrice } from '../utils/currency';
-
-const API_URL = 'http://localhost:8000';
+import API_URL from '../config/api';
 
 export default function AgentDeparts() {
   const navigate = useNavigate();

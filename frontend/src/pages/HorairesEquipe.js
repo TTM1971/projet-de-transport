@@ -12,7 +12,7 @@ import Card from '../components/Card';
  * - Admin : + gestionnaires.
  */
 export default function HorairesEquipe() {
-  const { user } = useAuth();
+  const { user, activeCity } = useAuth();
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -48,7 +48,7 @@ export default function HorairesEquipe() {
     return () => {
       c = true;
     };
-  }, []);
+  }, [user?.role, activeCity]);
 
   const loadShifts = async (uid) => {
     setSelectedUserId(uid);

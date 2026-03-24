@@ -12,11 +12,11 @@ import {
   Legend,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import API_URL from '../config/api';
 import Card from '../components/Card';
 import BackButton from '../components/BackButton';
 import { formatPrice } from '../utils/currency';
 
-const API_URL = 'http://localhost:8000';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 export default function ChiffreAffairesDetail() {

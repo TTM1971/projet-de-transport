@@ -18,6 +18,8 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      COMPOSE_BAKE: "false"
 
     steps:
       - name: Checkout

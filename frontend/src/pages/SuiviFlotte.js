@@ -3,8 +3,7 @@ import axios from 'axios';
 import Card from '../components/Card';
 import StatsWidget from '../components/StatsWidget';
 import { translateStatus } from '../utils/translations';
-
-const API_URL = 'http://localhost:8000';
+import API_URL from '../config/api';
 
 export default function SuiviFlotte() {
   const [buses, setBuses] = useState([]);

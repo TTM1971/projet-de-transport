@@ -9,7 +9,7 @@ from datetime import datetime, time, timedelta
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, load_only
 from sqlalchemy import func
 
 from database import get_db
@@ -121,8 +121,32 @@ def schedulable_overview(
     admin_city = (ville or "").strip().lower() if ville else None
     actor_city = (current_user.ville or "").strip().lower() if getattr(current_user, "ville", None) else None
 
-    chauffeurs_q = db.query(ChauffeurModel)
-    agents_q = db.query(UserModel).filter(UserModel.role == "agent", UserModel.is_active.isnot(False))
+    # Colonnes minimales (évite de charger hashed_password et gros champs inutiles)
+    chauffeurs_q = db.query(ChauffeurModel).options(
+        load_only(
+            ChauffeurModel.id,
+            ChauffeurModel.nom,
+            ChauffeurModel.prenom,
+            ChauffeurModel.statut,
+            ChauffeurModel.user_id,
+            ChauffeurModel.ville,
+        )
+    )
+    agents_q = (
+        db.query(UserModel)
+        .filter(UserModel.role == "agent", UserModel.is_active.isnot(False))
+        .options(
+            load_only(
+                UserModel.id,
+                UserModel.username,
+                UserModel.first_name,
+                UserModel.last_name,
+                UserModel.ville,
+                UserModel.role,
+                UserModel.is_active,
+            )
+        )
+    )
 
     # En mode "ville active" côté admin, on limite la vue à cette ville.
     if current_user.role == "admin" and admin_city:
@@ -138,9 +162,20 @@ def schedulable_overview(
 
     gestionnaires = []
     if current_user.role == "admin":
-        gestionnaires_q = db.query(UserModel).filter(
-            UserModel.role == "gestionnaire",
-            UserModel.is_active.isnot(False),
+        gestionnaires_q = (
+            db.query(UserModel)
+            .filter(UserModel.role == "gestionnaire", UserModel.is_active.isnot(False))
+            .options(
+                load_only(
+                    UserModel.id,
+                    UserModel.username,
+                    UserModel.first_name,
+                    UserModel.last_name,
+                    UserModel.ville,
+                    UserModel.role,
+                    UserModel.is_active,
+                )
+            )
         )
         if admin_city:
             gestionnaires_q = gestionnaires_q.filter(func.lower(UserModel.ville) == admin_city)

@@ -46,18 +46,26 @@ services:
       - DB_NAME=transport_db
       - DB_PORT=5432
       - CORS_ORIGINS=http://localhost,http://127.0.0.1
-      # Nombre de workers Uvicorn sous Gunicorn (ajuster selon CPU / charge)
-      - WEB_CONCURRENCY=2
     depends_on:
       database:
         condition: service_healthy
     command:
-      - sh
-      - -c
-      - >
-        exec gunicorn main:app -k uvicorn.workers.UvicornWorker
-        -w "$$WEB_CONCURRENCY" -b 0.0.0.0:8000
-        --timeout 120 --graceful-timeout 30 --access-logfile - --error-logfile -
+      - gunicorn
+      - main:app
+      - -k
+      - uvicorn.workers.UvicornWorker
+      - -w
+      - "2"
+      - -b
+      - 0.0.0.0:8000
+      - --timeout
+      - "600"
+      - --graceful-timeout
+      - "120"
+      - --access-logfile
+      - "-"
+      - --error-logfile
+      - "-"
     restart: unless-stopped
 
   database:

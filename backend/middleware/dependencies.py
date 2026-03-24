@@ -69,6 +69,14 @@ def require_gestionnaire_maintenance_or_admin():
     return require_role(["gestionnaire", "maintenance", "admin"])
 
 
+# Pré-instanciés pour Depends(...) — évite Depends(require_admin) sans appeler la factory.
+admin_only = require_role(["admin"])
+agent_or_admin_only = require_role(["agent", "admin"])
+gestionnaire_or_admin_only = require_role(["gestionnaire", "admin"])
+maintenance_or_admin_only = require_role(["maintenance", "admin"])
+gestionnaire_maintenance_or_admin_only = require_role(["gestionnaire", "maintenance", "admin"])
+
+
 def get_current_chauffeur_profile(
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),

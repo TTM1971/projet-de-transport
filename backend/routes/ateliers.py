@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from typing import List, Optional
 from datetime import datetime
-from middleware.dependencies import require_maintenance_or_admin, get_current_user
+from middleware.dependencies import maintenance_or_admin_only, get_current_user
 
 router = APIRouter()
 
@@ -42,7 +42,7 @@ def get_intervention(intervention_id: int, db: Session = Depends(get_db)):
 def enregistrer_intervention(
     atelier_data: AtelierCreate, 
     db: Session = Depends(get_db),
-    current_user = Depends(require_maintenance_or_admin)
+    current_user = Depends(maintenance_or_admin_only)
 ):
     """Enregistre une nouvelle intervention de maintenance"""
     # Vérifier que le bus existe
@@ -82,7 +82,7 @@ def update_intervention(
     intervention_id: int,
     atelier_update: AtelierUpdate,
     db: Session = Depends(get_db),
-    current_user = Depends(require_maintenance_or_admin)
+    current_user = Depends(maintenance_or_admin_only)
 ):
     """Met à jour une intervention de maintenance"""
     intervention = db.query(AtelierModel).filter(AtelierModel.id == intervention_id).first()
@@ -120,7 +120,7 @@ def update_intervention(
 def delete_intervention(
     intervention_id: int,
     db: Session = Depends(get_db),
-    current_user = Depends(require_maintenance_or_admin)
+    current_user = Depends(maintenance_or_admin_only)
 ):
     """Supprime une intervention (maintenance ou admin uniquement)"""
     intervention = db.query(AtelierModel).filter(AtelierModel.id == intervention_id).first()

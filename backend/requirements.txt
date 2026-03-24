@@ -1,4 +1,4 @@
-﻿# API (Docker)
+# API (Docker)
 fastapi==0.115.1
 uvicorn[standard]==0.29.0
 gunicorn==22.0.0
@@ -10,6 +10,7 @@ pydantic==2.10.6
 requests==2.32.3
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
 typing_extensions==4.12.2
 python-dateutil==2.9.0.post0
 scikit-learn==1.5.2

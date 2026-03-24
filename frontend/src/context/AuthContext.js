@@ -5,6 +5,26 @@ import { formatLoginError } from '../utils/apiError';
 
 const AuthContext = createContext(null);
 
+/** GET vers l’API (chemins relatifs ou absolus après le proxy) pour appliquer la ville active admin. */
+function _shouldAttachAdminCityParam(config, apiBase) {
+  const method = (config.method || 'get').toLowerCase();
+  if (method !== 'get') return false;
+  const raw = config.url || '';
+  if (!raw || raw.includes('/villes')) return false;
+  let path = raw;
+  try {
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      path = new URL(raw).pathname || '';
+    }
+  } catch {
+    /* garder raw */
+  }
+  if (apiBase.startsWith('http')) {
+    return raw.startsWith(apiBase);
+  }
+  return path.startsWith('/api') || path.startsWith(apiBase);
+}
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -26,14 +46,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const interceptor = axios.interceptors.request.use((config) => {
-      if (
-        user?.role === 'admin' &&
-        activeCity &&
-        config?.url &&
-        config.url.startsWith(API_URL) &&
-        config.method?.toLowerCase() === 'get' &&
-        !config.url.includes('/villes')
-      ) {
+      if (user?.role === 'admin' && activeCity && _shouldAttachAdminCityParam(config, API_URL)) {
         config.params = { ...(config.params || {}), ville: activeCity };
       }
       return config;

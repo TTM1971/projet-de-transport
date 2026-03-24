@@ -9,7 +9,7 @@ from models.ligne import Ligne as LigneModel
 from models.bus_chauffeur import BusChauffeur as BusChauffeurModel
 from schemas.depart import DepartCreate, DepartUpdate, Depart as DepartSchema
 from datetime import datetime, date, time, timedelta
-from middleware.dependencies import get_current_user, require_gestionnaire_or_admin, require_admin
+from middleware.dependencies import get_current_user, gestionnaire_or_admin_only
 from utils.driver_schedule import assert_no_driver_conflict, window_for_depart_fields
 from services.driver_schedule_ml import predict_block_minutes
 
@@ -144,7 +144,7 @@ def count_billets_for_depart(depart_id: int, db: Session = Depends(get_db)):
     return {"depart_id": depart_id, "billets_vendus": count}
 
 @router.post("/", response_model=DepartSchema)
-def create_depart(depart: DepartCreate, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+def create_depart(depart: DepartCreate, db: Session = Depends(get_db), current_user = Depends(gestionnaire_or_admin_only)):
     from models.bus import Bus as BusModel
     from models.ligne import Ligne as LigneModel
     from models.chauffeur import Chauffeur as ChauffeurModel
@@ -259,7 +259,7 @@ def generate_future_departs(
     heure_depart: str = Query("08:00", description="Heure de départ (HH:MM)"),
     jours_semaine: Optional[str] = Query(None, description="Jours de la semaine (ex: '0,1,2,3,4,5,6' pour tous les jours, 0=lundi)"),
     db: Session = Depends(get_db),
-    current_user = Depends(require_gestionnaire_or_admin)
+    current_user = Depends(gestionnaire_or_admin_only)
 ):
     """
     Génère automatiquement des départs futurs pour une période donnée.
@@ -373,7 +373,7 @@ def generate_future_departs(
         raise HTTPException(status_code=500, detail=f"Erreur lors de la génération: {str(e)}")
 
 @router.put("/{depart_id}", response_model=DepartSchema)
-def update_depart(depart_id: int, depart_update: DepartUpdate, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+def update_depart(depart_id: int, depart_update: DepartUpdate, db: Session = Depends(get_db), current_user = Depends(gestionnaire_or_admin_only)):
     from models.ligne import Ligne as LigneModel
     from models.bus import Bus as BusModel
     from models.chauffeur import Chauffeur as ChauffeurModel
@@ -477,7 +477,7 @@ def update_depart(depart_id: int, depart_update: DepartUpdate, db: Session = Dep
     return db_depart
 
 @router.delete("/{depart_id}")
-def delete_depart(depart_id: int, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+def delete_depart(depart_id: int, db: Session = Depends(get_db), current_user = Depends(gestionnaire_or_admin_only)):
     db_depart = db.query(DepartModel).filter(DepartModel.id == depart_id).first()
     if not db_depart:
         raise HTTPException(status_code=404, detail="Départ non trouvé")

@@ -10,7 +10,7 @@ from models.bus_chauffeur import BusChauffeur as BusChauffeurModel
 from models.bus import Bus as BusModel
 from models.chauffeur import Chauffeur as ChauffeurModel
 from schemas.bus_chauffeur import BusChauffeurCreate, BusChauffeurUpdate, BusChauffeur as BusChauffeurSchema
-from middleware.dependencies import require_admin, require_gestionnaire_or_admin, get_current_user
+from middleware.dependencies import admin_only, gestionnaire_or_admin_only, get_current_user
 
 router = APIRouter()
 
@@ -54,7 +54,7 @@ def get_bus_for_chauffeur(
 def create_bus_chauffeur_assignation(
     assignation: BusChauffeurCreate,
     db: Session = Depends(get_db),
-    current_user = Depends(require_gestionnaire_or_admin)
+    current_user = Depends(gestionnaire_or_admin_only)
 ):
     """
     Crée une nouvelle assignation de chauffeur à un bus
@@ -134,7 +134,7 @@ def create_bus_chauffeur_assignation(
     db.refresh(db_assignation)
     return db_assignation
 
-@router.put("/{assignation_id}", response_model=BusChauffeurSchema, dependencies=[Depends(require_gestionnaire_or_admin)])
+@router.put("/{assignation_id}", response_model=BusChauffeurSchema, dependencies=[Depends(gestionnaire_or_admin_only)])
 def update_bus_chauffeur_assignation(
     assignation_id: int,
     assignation_update: BusChauffeurUpdate,
@@ -153,7 +153,7 @@ def update_bus_chauffeur_assignation(
     db.refresh(db_assignation)
     return db_assignation
 
-@router.delete("/{assignation_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_admin)])
+@router.delete("/{assignation_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(admin_only)])
 def delete_bus_chauffeur_assignation(
     assignation_id: int,
     db: Session = Depends(get_db)

@@ -14,6 +14,7 @@ import {
   Filler
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
+import API_URL from '../config/api';
 import StatsWidget from './StatsWidget';
 import Card from './Card';
 import { formatPrice, eurToCad } from '../utils/currency';
@@ -28,8 +29,6 @@ ChartJS.register(
   Legend,
   Filler
 );
-
-const API_URL = 'http://localhost:8000';
 
 export default function DashboardAdmin() {
   const navigate = useNavigate();

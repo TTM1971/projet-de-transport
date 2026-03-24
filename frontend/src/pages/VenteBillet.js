@@ -5,8 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import Card from '../components/Card';
 import Logo from '../components/Logo';
 import { formatPrice } from '../utils/currency';
-
-const API_URL = 'http://localhost:8000';
+import API_URL from '../config/api';
 
 export default function VenteBillet() {
   const location = useLocation();

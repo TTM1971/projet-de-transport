@@ -10,7 +10,7 @@ from models.ligne import Ligne as LigneModel
 from models.destination import Destination as DestinationModel
 from models.atelier import Atelier as AtelierModel
 from models.depart import Depart as DepartModel
-from middleware.dependencies import require_admin, get_current_user
+from middleware.dependencies import admin_only, get_current_user
 
 router = APIRouter()
 
@@ -75,7 +75,7 @@ def get_historical_data(
     start_date_param: Optional[str] = None,  # Format: YYYY-MM-DD
     end_date_param: Optional[str] = None,  # Format: YYYY-MM-DD
     db: Session = Depends(get_db),
-    current_user = Depends(require_admin)
+    current_user = Depends(admin_only)
 ):
     """
     Récupère les données historiques pour les graphiques du dashboard admin.
@@ -241,7 +241,7 @@ def get_historical_data(
 def get_dashboard_summary(
     ville: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(require_admin)
+    current_user = Depends(admin_only)
 ):
     """
     Retourne un résumé des statistiques pour le dashboard admin

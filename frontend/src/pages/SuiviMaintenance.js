@@ -3,8 +3,7 @@ import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Card from '../components/Card';
 import { translateStatus, translateBreakdownType, translateSeverity } from '../utils/translations';
-
-const API_URL = 'http://localhost:8000';
+import API_URL from '../config/api';
 
 export default function SuiviMaintenance() {
   const location = useLocation();
