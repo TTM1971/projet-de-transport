@@ -1,0 +1,14 @@
+# Exemple HTTPS — copiez les lignes dans transport.conf ou un nouveau fichier conf.d/
+# après avoir obtenu des certificats (Let's Encrypt : certbot, ou fichiers .pem fournis).
+#
+# server {
+#     listen 443 ssl http2;
+#     server_name api.votredomaine.com;
+#
+#     ssl_certificate     /etc/nginx/ssl/fullchain.pem;
+#     ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+#     ssl_protocols       TLSv1.2 TLSv1.3;
+#     ssl_prefer_server_ciphers off;
+#
+#     # ... mêmes locations /api/ et / que transport.conf
+# }

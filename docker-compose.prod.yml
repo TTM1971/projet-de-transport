@@ -1,44 +1,40 @@
-# Pour éviter l'erreur Docker Compose "failed to execute bake: read |0: file already closed",
-# lancez avec COMPOSE_BAKE=false (voir README.md).
+# Production locale / préprod : build React statique, Nginx sert les fichiers, pas de hot-reload backend.
+# Usage : docker compose -f docker-compose.prod.yml up --build -d
+#
+# Prérequis : même .env à la racine que pour le dev (COMPOSE_BAKE=false si besoin).
+
 services:
+  frontend-build:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: build
+      args:
+        REACT_APP_API_URL: /api
+    image: transport-frontend-build:local
+    volumes:
+      - frontend_dist:/output
+    command: >
+      sh -c "rm -rf /output/* && cp -a /app/build/. /output/"
+    restart: "no"
+
   nginx:
     image: nginx:1.27-alpine
     ports:
       - "80:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/conf.d/transport.static.conf:/etc/nginx/conf.d/transport.conf:ro
+      - frontend_dist:/usr/share/nginx/html:ro
     depends_on:
-      - frontend
-      - backend
+      frontend-build:
+        condition: service_completed_successfully
+      backend:
+        condition: service_started
     restart: unless-stopped
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: development
-    ports:
-      - "3000:3000"
-    environment:
-      - REACT_APP_API_URL=/api
-      # Cible du proxy dev (setupProxy.js) : nom du service Docker
-      - PROXY_BACKEND=http://backend:8000
-      - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    depends_on:
-      - backend
-    restart: unless-stopped
-    stdin_open: true
-    tty: true
-    networks:
-      - default
 
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
@@ -49,16 +45,19 @@ services:
       - DB_PASSWORD=password
       - DB_NAME=transport_db
       - DB_PORT=5432
-      # Autoriser l'UI via Nginx (port 80) et accès direct :3000
-      - CORS_ORIGINS=http://localhost,http://127.0.0.1,http://localhost:3000,http://127.0.0.1:3000,http://frontend:3000
+      - CORS_ORIGINS=http://localhost,http://127.0.0.1
+      # Nombre de workers Uvicorn sous Gunicorn (ajuster selon CPU / charge)
+      - WEB_CONCURRENCY=2
     depends_on:
       database:
         condition: service_healthy
-    volumes:
-      - ./backend:/app
-      # Exclure venv du volume pour éviter les conflits
-      - /app/venv
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command:
+      - sh
+      - -c
+      - >
+        exec gunicorn main:app -k uvicorn.workers.UvicornWorker
+        -w "$$WEB_CONCURRENCY" -b 0.0.0.0:8000
+        --timeout 120 --graceful-timeout 30 --access-logfile - --error-logfile -
     restart: unless-stopped
 
   database:
@@ -68,14 +67,12 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
-      # Configuration pour réduire les erreurs "Broken pipe"
-      POSTGRES_LOG_STATEMENT: "none"  # Ne pas logger toutes les requêtes (réduit les logs)
-      POSTGRES_LOG_ERROR_VERBOSITY: "terse"  # Logs d'erreur plus compacts
+      POSTGRES_LOG_STATEMENT: "none"
+      POSTGRES_LOG_ERROR_VERBOSITY: "terse"
     ports:
       - "5432:5432"
     volumes:
       - ./database/data:/var/lib/postgresql/data
-    # Configuration des connexions TCP pour réduire les "Broken pipe"
     command: >
       postgres
       -c shared_buffers=256MB
@@ -114,3 +111,6 @@ services:
       timeout: 20s
       retries: 3
     restart: unless-stopped
+
+volumes:
+  frontend_dist:

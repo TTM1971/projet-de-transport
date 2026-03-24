@@ -11,7 +11,7 @@ from middleware.security import (
     SecurityHeadersMiddleware,
 )
 from routes import billets, pings, ateliers, auth, bus, ligne, destination, users, chauffeurs, departs, roles, organizations, parametres, sessions, audit, analytics, bus_chauffeurs, analytics_detail, chauffeur_portal, planning_staff, villes
-from database import engine, Base
+from database import engine, Base  # noqa: F401 — Base utilisé pour create_all
 from sqlalchemy import text
 from models import (
     User, Atelier, Ping, Bus, Ligne, Destination, Billet, Chauffeur, Depart,
@@ -136,3 +136,24 @@ app.include_router(bus_chauffeurs.router, prefix="/bus-chauffeurs", tags=["Assig
 @app.get("/")
 def root():
     return {"message": "Bienvenue sur l'API SmartTransCamer - Système de gestion de transport collectif!"}
+
+
+@app.get("/health", tags=["Santé"])
+def health():
+    """Liveness : le processus répond (sans test base de données)."""
+    return {"status": "ok"}
+
+
+@app.get("/health/ready", tags=["Santé"])
+def health_ready():
+    """Readiness : connexion PostgreSQL disponible."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return {"status": "ready", "database": "ok"}
+    except Exception:
+        logger.exception("Échec du test readiness (base de données)")
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "database": "unavailable"},
+        )

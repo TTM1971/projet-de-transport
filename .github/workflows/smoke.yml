@@ -1,0 +1,60 @@
+# Smoke tests : stack Docker (prod locale) + scripts/smoke_checks.py
+name: Smoke tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: smoke-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Préparer .env Compose
+        run: cp compose.env.example .env
+
+      - name: Démarrer la stack (build + prod)
+        run: docker compose -f docker-compose.prod.yml up --build -d
+
+      - name: Attendre l’API et la base (readiness)
+        run: |
+          set -e
+          for i in $(seq 1 120); do
+            if curl -sf --connect-timeout 5 http://127.0.0.1/api/health >/dev/null 2>&1 \
+              && curl -sf --connect-timeout 5 http://127.0.0.1/api/health/ready >/dev/null 2>&1; then
+              echo "Stack prête après ${i} tentatives (~$((i*3))s max)"
+              exit 0
+            fi
+            echo "Attente stack... ($i/120)"
+            sleep 3
+          done
+          echo "Timeout : la stack n’a pas répondu à temps"
+          docker compose -f docker-compose.prod.yml ps -a
+          exit 1
+
+      - name: Exécuter les smoke checks
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1
+          SMOKE_API_PREFIX: /api
+        run: python3 scripts/smoke_checks.py
+
+      - name: Journaux des conteneurs (échec)
+        if: failure()
+        run: docker compose -f docker-compose.prod.yml logs --tail 200
+
+      - name: Arrêter la stack
+        if: always()
+        run: docker compose -f docker-compose.prod.yml down -v --remove-orphans

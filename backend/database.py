@@ -46,7 +46,26 @@ def _build_database_url() -> URL:
     )
 
 
-DATABASE_URL = _build_database_url()
+def _database_url_string() -> str:
+    """
+    Chaîne SQLAlchemy pour create_engine.
+    Si DATABASE_URL est défini (hébergeurs type Railway, Render, Neon), on l'adapte au pilote actif.
+    """
+    raw = (os.getenv("DATABASE_URL") or "").strip()
+    if not raw:
+        return str(_build_database_url())
+    u = raw.replace("postgres://", "postgresql://", 1)
+    if u.startswith("postgresql://"):
+        u = f"{_PSYCOPG_DRIVER}://" + u[len("postgresql://") :]
+    elif not u.startswith(f"{_PSYCOPG_DRIVER}://"):
+        u = f"{_PSYCOPG_DRIVER}://" + u
+    return u
+
+
+DATABASE_URL = _database_url_string()
+
+# SSL (obligatoire sur beaucoup de PostgreSQL managés) : PGSSLMODE=require|verify-full|prefer|disable
+_PG_SSLMODE = (os.getenv("PGSSLMODE") or "").strip()
 
 # Arguments de connexion selon le pilote
 if _USE_PSYCOPG3:
@@ -63,6 +82,8 @@ else:
         "keepalives_interval": 10,
         "keepalives_count": 5,
     }
+if _PG_SSLMODE:
+    _CONNECT_ARGS["sslmode"] = _PG_SSLMODE
 
 engine = create_engine(
     DATABASE_URL,

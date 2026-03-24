@@ -22,9 +22,11 @@ Application web complète de gestion d'exploitation transport:
 projet-de-transport/
 ├── frontend/                 # Interface React
 ├── backend/                  # API FastAPI
+├── nginx/                    # Nginx (reverse proxy dev + conf prod statique)
 ├── database/data/            # Données PostgreSQL persistées
 ├── ingestion_pipeline/data/  # Données MinIO persistées
-├── docker-compose.yml
+├── docker-compose.yml        # Développement (React en mode dev sur :3000)
+├── docker-compose.prod.yml   # Production locale : build statique servi par Nginx
 ├── compose.env.example
 └── README.md
 ```
@@ -68,10 +70,37 @@ docker compose up --build -d
 
 ### 3) Verifier les services
 
-- Frontend: [http://localhost:3000](http://localhost:3000)
-- API: [http://localhost:8000](http://localhost:8000)
-- Swagger: [http://localhost:8000/docs](http://localhost:8000/docs)
-- MinIO Console: [http://localhost:9001](http://localhost:9001) (minioadmin / minioadmin)
+- **Application (recommandé, via Nginx)** : [http://localhost](http://localhost) — l’API est appelée en `/api/...` depuis le navigateur.
+- Frontend direct (dev) : [http://localhost:3000](http://localhost:3000) — avec `setupProxy`, les appels `/api` sont aussi relayés vers le backend.
+- API directe : [http://localhost:8000](http://localhost:8000)
+- Swagger : [http://localhost:8000/docs](http://localhost:8000/docs)
+- MinIO Console : [http://localhost:9001](http://localhost:9001) (minioadmin / minioadmin)
+
+### Nginx
+
+Le service `nginx` écoute sur le **port 80** et :
+
+- sert l’interface React en proxy vers `frontend:3000` ;
+- expose l’API sous **`/api/`** (le préfixe est retiré avant d’atteindre FastAPI : `/api/auth/login` → `/auth/login`).
+
+Fichiers : `nginx/nginx.conf`, `nginx/conf.d/transport.conf`. Exemple TLS : `nginx/ssl.conf.example`.
+
+En local **sans Docker**, si vous lancez `npm start` dans `frontend/`, définissez dans `.env.development.local` par exemple `PROXY_BACKEND=http://127.0.0.1:8000` pour que `/api` pointe vers votre backend local.
+
+### Production locale (fichiers statiques + Nginx)
+
+Pour servir le **build** React depuis Nginx (sans serveur de dev sur le port 3000) et un backend **sans** `--reload` :
+
+```bash
+docker compose -f docker-compose.prod.yml up --build -d
+```
+
+- Application : [http://localhost](http://localhost) (même schéma `/api/...`).
+- Le service `frontend-build` copie une fois le résultat de `npm run build` dans un volume partagé avec Nginx ; la config utilisée est `nginx/conf.d/transport.static.conf`.
+- Le backend est lancé avec **Gunicorn** et des workers **Uvicorn** (`uvicorn.workers.UvicornWorker`). Le nombre de workers est réglé par la variable d’environnement **`WEB_CONCURRENCY`** dans `docker-compose.prod.yml` (par défaut `2`).
+- Arrêt : `docker compose -f docker-compose.prod.yml down` (le volume nommé `frontend_dist` peut être supprimé avec `down -v` pour forcer un rebuild front au prochain démarrage).
+
+Sur un **serveur de production**, adaptez `CORS_ORIGINS`, TLS (`nginx/ssl.conf.example`), et évitez d’exposer les ports internes (8000, 5432) publiquement si ce n’est pas nécessaire.
 
 ## Jeu de donnees de test Canada
 
@@ -140,6 +169,12 @@ npm start
 ## Commandes utiles
 
 ```bash
+# Stack développement (défaut)
+docker compose up --build -d
+
+# Stack production locale (statique + Nginx)
+docker compose -f docker-compose.prod.yml up --build -d
+
 # Logs
 docker compose logs -f
 
@@ -158,6 +193,33 @@ docker compose exec backend bash
 # Console postgres
 docker compose exec database psql -U user -d transport_db
 ```
+
+### Smoke checks (après déploiement)
+
+L’API expose :
+
+- `GET /health` — liveness (processus OK, sans test base) ;
+- `GET /health/ready` — readiness (requête `SELECT 1` sur PostgreSQL).
+
+Derrière Nginx : `/api/health` et `/api/health/ready` (réécriture vers le backend).
+
+Script Python (sans dépendance supplémentaire), à lancer une fois la stack joignable :
+
+```bash
+python scripts/smoke_checks.py
+```
+
+Variables utiles : `SMOKE_BASE_URL` (ex. `http://localhost`), `SMOKE_API_PREFIX` (défaut `/api` ; vide pour tester l’API directement sur le port 8000), `SMOKE_SKIP_FRONTEND=1` si vous ne servez pas d’UI sur la base URL. Code de sortie `0` si tout passe, `1` sinon (adapté CI / pipeline).
+
+Sous PowerShell, API directe sans préfixe :
+
+```powershell
+$env:SMOKE_BASE_URL = "http://127.0.0.1:8000"
+$env:SMOKE_API_PREFIX = ""
+python scripts/smoke_checks.py
+```
+
+**GitHub Actions** : le workflow `.github/workflows/smoke.yml` lance `docker compose -f docker-compose.prod.yml up --build`, attend les endpoints `/api/health` et `/api/health/ready`, puis exécute `python3 scripts/smoke_checks.py`. Déclenché sur les **pull requests**, sur les **push** vers `main` ou `master`, et **manuellement** (onglet Actions → « Smoke tests » → Run workflow).
 
 ## Fonctionnalites metier principales
 
@@ -178,3 +240,44 @@ docker compose exec database psql -U user -d transport_db
 - Si l'UI ne charge pas: verifier `docker compose ps` puis `docker compose logs -f`.
 - Si l'API renvoie des erreurs CORS/Origin: verifier les variables de `backend/.env.example`.
 - Si les donnees semblent incoherentes: relancer le seed Canada puis rafraichir l'application.
+
+## Mise en production et PostgreSQL
+
+En developpement, la base est deja **PostgreSQL** (conteneur `database` dans `docker-compose.yml`).  
+En production, vous creez une **base PostgreSQL dediee** (managed : RDS, Azure Database, Neon, Supabase, etc. ou serveur VPS avec PostgreSQL).
+
+### Etapes generales
+
+1. Creer une base PostgreSQL + un utilisateur avec droits sur cette base.
+2. Definir les variables cote backend :
+   - soit `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_PORT` ;
+   - soit une seule `DATABASE_URL` au format `postgresql://user:pass@hote:5432/nom_base` ;
+   - pour la plupart des offres cloud, ajouter `PGSSLMODE=require` (voir `backend/.env.example`).
+3. Deployer l’API : au premier demarrage, `main.py` execute `Base.metadata.create_all()` puis `ensure_schema_compat()` pour aligner le schema.
+4. Migrer les donnees si besoin depuis votre environnement actuel (voir ci-dessous).
+5. En production : activer `SECURITY_STRICT_ORIGIN=true`, renseigner `CORS_ORIGINS` avec l’URL du frontend, et `TRUSTED_HOSTS` avec le nom d’hote de l’API.
+
+### Exporter puis importer les donnees (pg_dump / pg_restore)
+
+Sur la machine qui a acces a l’ancienne base (ex. Docker local) :
+
+```bash
+docker compose exec -T database pg_dump -U user -d transport_db -Fc -f /tmp/transport.dump
+docker compose cp database:/tmp/transport.dump ./transport.dump
+```
+
+Sur la machine qui peut joindre la base de production (remplacer les parametres) :
+
+```bash
+pg_restore -h VOTRE_HOTE -U VOTRE_USER -d VOTRE_DB --no-owner --clean --if-exists transport.dump
+```
+
+Si vous preferez un SQL brut :
+
+```bash
+docker compose exec -T database pg_dump -U user -d transport_db --no-owner > transport.sql
+psql -h VOTRE_HOTE -U VOTRE_USER -d VOTRE_DB -f transport.sql
+```
+
+En cas de base de production **vide** et sans besoin de conserver l’historique, vous pouvez aussi ne pas restaurer de dump et recharger uniquement le seed :  
+`python backend/scripts/seed_canada_test_data.py` (a lancer depuis un environnement configure pour pointer vers la prod, avec precautions).

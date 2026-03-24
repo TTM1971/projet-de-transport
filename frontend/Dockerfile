@@ -1,24 +1,21 @@
-FROM node:18-alpine
-
+# Étape build — image utilisée par docker-compose.prod.yml (export vers volume Nginx)
+FROM node:18-alpine AS build
 WORKDIR /app
-
-# Copier les fichiers de dépendances
 COPY package*.json ./
-
-# Installer les dépendances
-RUN npm install
-
-# Copier le reste du code
+RUN npm ci
 COPY . .
+ARG REACT_APP_API_URL=/api
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+RUN npm run build
 
-# Exposer le port
+# Développement — cible par défaut (docker compose dev)
+FROM node:18-alpine AS development
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
 EXPOSE 3000
-
-# Variables d'environnement pour React
 ENV CHOKIDAR_USEPOLLING=true
 ENV WATCHPACK_POLLING=true
-
-# Démarrer l'application en mode développement
-# Utiliser DANGEROUSLY_DISABLE_HOST_CHECK pour accepter les connexions depuis l'extérieur du conteneur
 ENV DANGEROUSLY_DISABLE_HOST_CHECK=true
 CMD ["npm", "start"]

@@ -19,7 +19,8 @@ from starlette.responses import JSONResponse, Response
 def _parse_origins() -> List[str]:
     raw = os.getenv(
         "CORS_ORIGINS",
-        "http://localhost:3000,http://127.0.0.1:3000,http://frontend:3000",
+        "http://localhost,http://127.0.0.1,http://localhost:3000,"
+        "http://127.0.0.1:3000,http://frontend:3000",
     )
     return [o.strip() for o in raw.split(",") if o.strip()]
 
@@ -40,6 +41,8 @@ ALLOW_MISSING_ORIGIN = os.getenv("SECURITY_ALLOW_MISSING_ORIGIN", "true").lower(
 def _path_skips_origin_check(path: str) -> bool:
     """Endpoints publics ou préflight : ne pas bloquer."""
     if path == "/":
+        return True
+    if path.startswith("/health"):
         return True
     if path.startswith("/docs") or path.startswith("/redoc"):
         return True
