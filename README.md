@@ -6,6 +6,7 @@ Application web complète de gestion d'exploitation transport:
 - suivi flotte / maintenance
 - analytics et audit
 - gestion multi-villes
+<img width="1299" height="592" alt="image" src="https://github.com/user-attachments/assets/a99c9455-625c-4161-8fcd-b54eefce4dbe" />
 
 ## Stack technique
 
