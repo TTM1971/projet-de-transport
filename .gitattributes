@@ -1,0 +1,43 @@
+# Détection texte / binaire (Windows ↔ Linux, Docker, CI)
+* text=auto eol=lf
+
+# Fichiers texte : LF + UTF-8 dans l’éditeur (évite UTF-16 sur requirements.txt, etc.)
+*.py text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.toml text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+*.env text eol=lf
+*.example text eol=lf
+*.sh text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.conf text eol=lf
+
+Dockerfile text eol=lf
+docker-compose*.yml text eol=lf
+
+# Binaires / ne pas normaliser
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.pyc binary
+*.pyo binary
+*.sqlite3 binary
+*.dump binary
