@@ -17,8 +17,6 @@ import { Line, Bar } from 'react-chartjs-2';
 import StatsWidget from './StatsWidget';
 import Card from './Card';
 import { formatPrice, eurToCad } from '../utils/currency';
-import './DashboardAdmin.css';
-
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -35,11 +33,12 @@ const API_URL = 'http://localhost:8000';
 
 export default function DashboardAdmin() {
   const navigate = useNavigate();
-  const [period, setPeriod] = useState(30); // 30 jours par défaut
+  const period = 30;
   const [historicalData, setHistoricalData] = useState([]);
   const [summary, setSummary] = useState(null);
+  const [managersActivity, setManagersActivity] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [chartType, setChartType] = useState('line'); // 'line' ou 'bar'
+  const chartType = 'line';
 
   useEffect(() => {
     fetchData();
@@ -48,12 +47,14 @@ export default function DashboardAdmin() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [historicalRes, summaryRes] = await Promise.all([
+      const [historicalRes, summaryRes, managersRes] = await Promise.all([
         axios.get(`${API_URL}/analytics/dashboard/historical?days=${period}`),
-        axios.get(`${API_URL}/analytics/dashboard/summary`)
+        axios.get(`${API_URL}/analytics/dashboard/summary`),
+        axios.get(`${API_URL}/admin/audit/gestionnaires/activites?days=${period}`),
       ]);
       setHistoricalData(historicalRes.data.data);
       setSummary(summaryRes.data);
+      setManagersActivity(managersRes.data.gestionnaires || []);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -69,12 +70,12 @@ export default function DashboardAdmin() {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   });
 
-  // Revenue Chart (CAD)
+  // Revenue Chart
   const caChartData = {
     labels: dates,
     datasets: [
       {
-        label: 'Revenue (CAD)',
+        label: 'Revenue',
         data: historicalData.map(d => eurToCad(d.chiffre_affaires)),
         borderColor: 'rgb(75, 192, 192)',
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
@@ -200,28 +201,25 @@ export default function DashboardAdmin() {
     <div className="page-container dashboard-admin">
       <div className="dashboard-header">
         <h1>Dashboard - Administration</h1>
-        <p className="dashboard-subtitle">
-          Interactive performance visualization over {period} day{period > 1 ? 's' : ''}
-        </p>
       </div>
 
       {/* Summary Statistics */}
       {summary && (
         <div className="stats-grid">
           <StatsWidget
-            title="Total Revenue (CAD)"
+            title="Total Revenue"
             value={formatPrice(summary.chiffre_affaires_total)}
             color="#27ae60"
             onClick={() => navigate('/dashboard/details/ca')}
           />
           <StatsWidget
-            title="Today's Revenue (CAD)"
+            title="Today's Revenue"
             value={formatPrice(summary.chiffre_affaires_aujourdhui)}
             color="#3498db"
             onClick={() => navigate('/dashboard/details/ca', { state: { todayOnly: true } })}
           />
           <StatsWidget
-            title="Tickets Sold (Total)"
+            title="Total Tickets Sold"
             value={summary.total_billets}
             color="#f39c12"
             onClick={() => navigate('/dashboard/details/billets')}
@@ -236,13 +234,13 @@ export default function DashboardAdmin() {
             title="Buses in Service"
             value={summary.buses_en_service}
             color="#27ae60"
-            onClick={() => window.location.href = '/dashboard/maintenance/service'}
+            onClick={() => navigate('/dashboard/maintenance/service')}
           />
           <StatsWidget
             title="Buses in Maintenance"
             value={summary.buses_maintenance}
             color="#e67e22"
-            onClick={() => window.location.href = '/dashboard/maintenance/bus'}
+            onClick={() => navigate('/dashboard/maintenance/bus')}
           />
           <StatsWidget
             title="Active Lines"
@@ -260,119 +258,41 @@ export default function DashboardAdmin() {
             title="Ongoing Interventions"
             value={summary.interventions_en_cours}
             color="#95a5a6"
-            onClick={() => window.location.href = '/dashboard/maintenance/interventions'}
+            onClick={() => navigate('/dashboard/maintenance/interventions')}
           />
         </div>
       )}
 
-      {/* Controls */}
-      <div className="dashboard-controls">
-        <div className="period-selector">
-          <label>Period:</label>
-          <button
-            className={period === 7 ? 'active' : ''}
-            onClick={() => setPeriod(7)}
-          >
-            7 days
-          </button>
-          <button
-            className={period === 30 ? 'active' : ''}
-            onClick={() => setPeriod(30)}
-          >
-            30 days
-          </button>
-          <button
-            className={period === 90 ? 'active' : ''}
-            onClick={() => setPeriod(90)}
-          >
-            90 days
-          </button>
-          <button
-            className={period === 365 ? 'active' : ''}
-            onClick={() => setPeriod(365)}
-          >
-            1 year
-          </button>
+      <Card title="Suivi des gestionnaires par ville">
+        <div className="data-table-container">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Gestionnaire</th>
+                <th>Ville</th>
+                <th>Actions - {period} jours</th>
+                <th>Dernières actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {managersActivity.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="empty-state">Aucune activité</td>
+                </tr>
+              ) : managersActivity.map((entry) => (
+                <tr key={entry.manager.id}>
+                  <td>{entry.manager.first_name || entry.manager.username} {entry.manager.last_name || ''}</td>
+                  <td>{entry.manager.ville || 'N/A'}</td>
+                  <td>{entry.total_actions}</td>
+                  <td>
+                    {(entry.recent_actions || []).slice(0, 3).map((a) => a.action).join(', ') || 'N/A'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <div className="chart-type-selector">
-          <label>Chart Type:</label>
-          <button
-            className={chartType === 'line' ? 'active' : ''}
-            onClick={() => setChartType('line')}
-          >
-            Line
-          </button>
-          <button
-            className={chartType === 'bar' ? 'active' : ''}
-            onClick={() => setChartType('bar')}
-          >
-            Bars
-          </button>
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div className="charts-grid">
-        <Card title="Revenue Evolution (CAD)">
-          <div className="chart-container">
-            {chartType === 'line' ? (
-              <Line data={caChartData} options={chartOptions} />
-            ) : (
-              <Bar data={caChartData} options={chartOptions} />
-            )}
-          </div>
-        </Card>
-
-        <Card title="Tickets Sold Evolution">
-          <div className="chart-container">
-            {chartType === 'line' ? (
-              <Line data={billetsChartData} options={chartOptions} />
-            ) : (
-              <Bar data={billetsChartData} options={chartOptions} />
-            )}
-          </div>
-        </Card>
-
-        <Card title="Buses in Service Evolution">
-          <div className="chart-container">
-            {chartType === 'line' ? (
-              <Line data={busChartData} options={chartOptions} />
-            ) : (
-              <Bar data={busChartData} options={chartOptions} />
-            )}
-          </div>
-        </Card>
-
-        <Card title="Maintenance Interventions Evolution">
-          <div className="chart-container">
-            {chartType === 'line' ? (
-              <Line data={maintenanceChartData} options={chartOptions} />
-            ) : (
-              <Bar data={maintenanceChartData} options={chartOptions} />
-            )}
-          </div>
-        </Card>
-
-        <Card title="Active Lines Evolution">
-          <div className="chart-container">
-            {chartType === 'line' ? (
-              <Line data={lignesChartData} options={chartOptions} />
-            ) : (
-              <Bar data={lignesChartData} options={chartOptions} />
-            )}
-          </div>
-        </Card>
-
-        <Card title="Destinations Evolution">
-          <div className="chart-container">
-            {chartType === 'line' ? (
-              <Line data={destinationsChartData} options={chartOptions} />
-            ) : (
-              <Bar data={destinationsChartData} options={chartOptions} />
-            )}
-          </div>
-        </Card>
-      </div>
+      </Card>
     </div>
   );
 }

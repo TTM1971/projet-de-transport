@@ -71,6 +71,7 @@ def get_historical_data(
     destination_id: Optional[int] = None,
     bus_id: Optional[int] = None,
     chauffeur_id: Optional[int] = None,
+    ville: Optional[str] = None,
     start_date_param: Optional[str] = None,  # Format: YYYY-MM-DD
     end_date_param: Optional[str] = None,  # Format: YYYY-MM-DD
     db: Session = Depends(get_db),
@@ -127,6 +128,10 @@ def get_historical_data(
         billet_filters.append(BilletModel.bus_id == bus_id)
     if chauffeur_id:
         billet_filters.append(BilletModel.chauffeur_id == chauffeur_id)
+    if ville:
+        city_prefix = f"{ville.strip().lower()},%"
+        lignes_ids_city = db.query(LigneModel.id).filter(func.lower(LigneModel.point_depart).like(city_prefix)).subquery()
+        billet_filters.append(BilletModel.ligne_id.in_(lignes_ids_city))
     
     # Récupérer le chiffre d'affaires et billets vendus par jour
     billets_query = db.query(
@@ -173,19 +178,29 @@ def get_historical_data(
             daily_data[date_str]["interventions_maintenance"] = int(intervention.nb_interventions or 0)
     
     # Récupérer les lignes actives (on considère qu'une ligne avec des départs est active)
-    ligne_ids_with_departs = db.query(DepartModel.ligne_id).filter(
+    departs_q = db.query(DepartModel.ligne_id).filter(
         DepartModel.date_depart >= start_date,
         DepartModel.date_depart <= end_date
-    ).distinct().all()
+    )
+    if ville:
+        city_prefix = f"{ville.strip().lower()},%"
+        lignes_ids_city = db.query(LigneModel.id).filter(func.lower(LigneModel.point_depart).like(city_prefix)).subquery()
+        departs_q = departs_q.filter(DepartModel.ligne_id.in_(lignes_ids_city))
+    ligne_ids_with_departs = departs_q.distinct().all()
     
     ligne_ids = [l[0] for l in ligne_ids_with_departs]
     
     # Pour chaque jour, compter les lignes uniques avec départs
     for date_str in daily_data:
         target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-        lignes_ce_jour = db.query(DepartModel.ligne_id).filter(
+        lines_day_q = db.query(DepartModel.ligne_id).filter(
             func.date(DepartModel.date_depart) == target_date
-        ).distinct().count()
+        )
+        if ville:
+            city_prefix = f"{ville.strip().lower()},%"
+            lignes_ids_city = db.query(LigneModel.id).filter(func.lower(LigneModel.point_depart).like(city_prefix)).subquery()
+            lines_day_q = lines_day_q.filter(DepartModel.ligne_id.in_(lignes_ids_city))
+        lignes_ce_jour = lines_day_q.distinct().count()
         daily_data[date_str]["lignes_actives"] = lignes_ce_jour
     
     # Récupérer les destinations actives
@@ -197,9 +212,14 @@ def get_historical_data(
     
     for date_str in daily_data:
         target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-        destinations_ce_jour = db.query(BilletModel.destination_id).filter(
+        dest_day_q = db.query(BilletModel.destination_id).filter(
             func.date(BilletModel.date_achat) == target_date
-        ).distinct().count()
+        )
+        if ville:
+            city_prefix = f"{ville.strip().lower()},%"
+            lignes_ids_city = db.query(LigneModel.id).filter(func.lower(LigneModel.point_depart).like(city_prefix)).subquery()
+            dest_day_q = dest_day_q.filter(BilletModel.ligne_id.in_(lignes_ids_city))
+        destinations_ce_jour = dest_day_q.distinct().count()
         daily_data[date_str]["destinations"] = destinations_ce_jour
     
     return {
@@ -212,11 +232,14 @@ def get_historical_data(
             "destination_id": destination_id,
             "bus_id": bus_id,
             "chauffeur_id": chauffeur_id
+            ,
+            "ville": ville
         }
     }
 
 @router.get("/dashboard/summary")
 def get_dashboard_summary(
+    ville: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user = Depends(require_admin)
 ):
@@ -226,24 +249,44 @@ def get_dashboard_summary(
     aujourdhui = date.today()
     
     # Chiffre d'affaires total et aujourd'hui
-    ca_total = db.query(func.sum(BilletModel.montant)).filter(
+    ca_total_q = db.query(func.sum(BilletModel.montant)).filter(
         BilletModel.statut.in_(["valide", "utilise"])
-    ).scalar() or 0.0
+    )
+    if ville:
+        city_prefix = f"{ville.strip().lower()},%"
+        lignes_ids_city = db.query(LigneModel.id).filter(func.lower(LigneModel.point_depart).like(city_prefix)).subquery()
+        ca_total_q = ca_total_q.filter(BilletModel.ligne_id.in_(lignes_ids_city))
+    ca_total = ca_total_q.scalar() or 0.0
     
-    ca_aujourdhui = db.query(func.sum(BilletModel.montant)).filter(
+    ca_aujourdhui_q = db.query(func.sum(BilletModel.montant)).filter(
         func.date(BilletModel.date_achat) == aujourdhui,
         BilletModel.statut.in_(["valide", "utilise"])
-    ).scalar() or 0.0
+    )
+    if ville:
+        city_prefix = f"{ville.strip().lower()},%"
+        lignes_ids_city = db.query(LigneModel.id).filter(func.lower(LigneModel.point_depart).like(city_prefix)).subquery()
+        ca_aujourdhui_q = ca_aujourdhui_q.filter(BilletModel.ligne_id.in_(lignes_ids_city))
+    ca_aujourdhui = ca_aujourdhui_q.scalar() or 0.0
     
     # Billets
-    total_billets = db.query(func.count(BilletModel.id)).filter(
+    total_billets_q = db.query(func.count(BilletModel.id)).filter(
         BilletModel.statut.in_(["valide", "utilise"])
-    ).scalar() or 0
+    )
+    if ville:
+        city_prefix = f"{ville.strip().lower()},%"
+        lignes_ids_city = db.query(LigneModel.id).filter(func.lower(LigneModel.point_depart).like(city_prefix)).subquery()
+        total_billets_q = total_billets_q.filter(BilletModel.ligne_id.in_(lignes_ids_city))
+    total_billets = total_billets_q.scalar() or 0
     
-    billets_aujourdhui = db.query(func.count(BilletModel.id)).filter(
+    billets_aujourdhui_q = db.query(func.count(BilletModel.id)).filter(
         func.date(BilletModel.date_achat) == aujourdhui,
         BilletModel.statut.in_(["valide", "utilise"])
-    ).scalar() or 0
+    )
+    if ville:
+        city_prefix = f"{ville.strip().lower()},%"
+        lignes_ids_city = db.query(LigneModel.id).filter(func.lower(LigneModel.point_depart).like(city_prefix)).subquery()
+        billets_aujourdhui_q = billets_aujourdhui_q.filter(BilletModel.ligne_id.in_(lignes_ids_city))
+    billets_aujourdhui = billets_aujourdhui_q.scalar() or 0
     
     # Bus
     buses_en_service = db.query(func.count(BusModel.id)).filter(
@@ -255,12 +298,20 @@ def get_dashboard_summary(
     ).scalar() or 0
     
     # Lignes actives (avec des départs aujourd'hui ou futurs)
-    lignes_actives = db.query(DepartModel.ligne_id).filter(
+    lignes_actives_q = db.query(DepartModel.ligne_id).filter(
         func.date(DepartModel.date_depart) >= aujourdhui
-    ).distinct().count()
+    )
+    if ville:
+        city_prefix = f"{ville.strip().lower()},%"
+        lignes_ids_city = db.query(LigneModel.id).filter(func.lower(LigneModel.point_depart).like(city_prefix)).subquery()
+        lignes_actives_q = lignes_actives_q.filter(DepartModel.ligne_id.in_(lignes_ids_city))
+    lignes_actives = lignes_actives_q.distinct().count()
     
     # Destinations
-    destinations = db.query(func.count(DestinationModel.id)).scalar() or 0
+    if ville:
+        destinations = db.query(func.count(DestinationModel.id)).filter(func.lower(DestinationModel.ville) == ville.strip().lower()).scalar() or 0
+    else:
+        destinations = db.query(func.count(DestinationModel.id)).scalar() or 0
     
     # Interventions en cours
     interventions_en_cours = db.query(func.count(AtelierModel.id)).filter(

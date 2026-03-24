@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import DataTable from '../components/DataTable';
 import Card from '../components/Card';
-import './CommonPages.css';
+import API_URL from '../config/api';
+import { useAuth } from '../context/AuthContext';
 
-const API_URL = 'http://localhost:8000';
-
+/**
+ * Liste des conducteurs — création désactivée (provisionnement RH / scripts).
+ * Suppression : administrateur uniquement.
+ */
 export default function GestionChauffeurs() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [chauffeurs, setChauffeurs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -25,7 +31,6 @@ export default function GestionChauffeurs() {
     fetchChauffeurs();
   }, []);
 
-  // Fermer le modal quand on change de page
   useEffect(() => {
     setShowModal(false);
     setEditingChauffeur(null);
@@ -37,7 +42,7 @@ export default function GestionChauffeurs() {
       setChauffeurs(response.data);
     } catch (error) {
       console.error('Error:', error);
-      alert('Error loading drivers');
+      alert('Erreur de chargement des conducteurs');
     } finally {
       setLoading(false);
     }
@@ -45,14 +50,10 @@ export default function GestionChauffeurs() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!editingChauffeur) return;
     try {
-      if (editingChauffeur) {
-        await axios.put(`${API_URL}/chauffeurs/${editingChauffeur.id}`, formData);
-        alert('Driver updated successfully!');
-      } else {
-        await axios.post(`${API_URL}/chauffeurs/`, formData);
-        alert('Driver created successfully!');
-      }
+      await axios.put(`${API_URL}/chauffeurs/${editingChauffeur.id}`, formData);
+      alert('Conducteur mis à jour.');
       setShowModal(false);
       setEditingChauffeur(null);
       setFormData({
@@ -64,7 +65,7 @@ export default function GestionChauffeurs() {
       });
       fetchChauffeurs();
     } catch (error) {
-      alert('Error: ' + (error.response?.data?.detail || error.message));
+      alert('Erreur : ' + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -81,52 +82,43 @@ export default function GestionChauffeurs() {
   };
 
   const handleDelete = async (chauffeur) => {
-    if (!window.confirm(`Delete driver ${chauffeur.prenom} ${chauffeur.nom}?`)) return;
+    if (!isAdmin) return;
+    if (!window.confirm(`Supprimer le conducteur ${chauffeur.prenom} ${chauffeur.nom} ?`)) return;
     try {
       await axios.delete(`${API_URL}/chauffeurs/${chauffeur.id}`);
-      alert('Driver deleted!');
+      alert('Conducteur supprimé.');
       fetchChauffeurs();
     } catch (error) {
-      alert('Error deleting driver');
+      alert('Erreur lors de la suppression');
     }
   };
 
   const columns = [
     { header: 'ID', field: 'id' },
-    { header: 'Last Name', field: 'nom' },
-    { header: 'First Name', field: 'prenom' },
-    { header: 'License Number', field: 'numero_permis' },
-    { header: 'Phone', field: 'telephone' },
-    { header: 'Status', field: 'statut', formatter: (value) => {
+    { header: 'Nom', field: 'nom' },
+    { header: 'Prénom', field: 'prenom' },
+    { header: 'Permis', field: 'numero_permis' },
+    { header: 'Téléphone', field: 'telephone' },
+    { header: 'Statut', field: 'statut', formatter: (value) => {
       const translations = { 
-        'actif': 'Active', 
-        'en_conge': 'On Leave', 
-        'inactif': 'Inactive',
-        'suspendu': 'Suspended'
+        'actif': 'Actif', 
+        'en_conge': 'Congé', 
+        'conge': 'Congé',
+        'inactif': 'Inactif',
+        'suspendu': 'Suspendu'
       };
       return translations[value] || value;
     }}
   ];
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) return <div className="loading">Chargement…</div>;
 
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>Driver Management</h1>
-        <button className="btn-primary" onClick={() => {
-          setEditingChauffeur(null);
-          setFormData({
-            nom: '',
-            prenom: '',
-            numero_permis: '',
-            telephone: '',
-            statut: 'actif'
-          });
-          setShowModal(true);
-        }}>
-          + Add Driver
-        </button>
+        <div>
+          <h1>Conducteurs</h1>
+        </div>
       </div>
 
       <Card>
@@ -134,20 +126,21 @@ export default function GestionChauffeurs() {
           columns={columns}
           data={chauffeurs}
           onEdit={handleEdit}
-          onDelete={handleDelete}
+          onDelete={isAdmin ? handleDelete : undefined}
+          onRowClick={(row) => navigate(`/chauffeurs/${row.id}/planning`)}
         />
       </Card>
 
-      {showModal && (
+      {showModal && editingChauffeur && (
         <div className="modal-overlay" onClick={() => {
           setShowModal(false);
           setEditingChauffeur(null);
         }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>{editingChauffeur ? 'Edit Driver' : 'New Driver'}</h2>
+            <h2>Modifier le conducteur</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label>Last Name *</label>
+                <label>Nom *</label>
                 <input
                   type="text"
                   required
@@ -156,7 +149,7 @@ export default function GestionChauffeurs() {
                 />
               </div>
               <div className="form-group">
-                <label>First Name *</label>
+                <label>Prénom *</label>
                 <input
                   type="text"
                   required
@@ -165,7 +158,7 @@ export default function GestionChauffeurs() {
                 />
               </div>
               <div className="form-group">
-                <label>License Number *</label>
+                <label>Numéro de permis *</label>
                 <input
                   type="text"
                   required
@@ -174,7 +167,7 @@ export default function GestionChauffeurs() {
                 />
               </div>
               <div className="form-group">
-                <label>Phone</label>
+                <label>Téléphone</label>
                 <input
                   type="text"
                   value={formData.telephone}
@@ -182,15 +175,15 @@ export default function GestionChauffeurs() {
                 />
               </div>
               <div className="form-group">
-                <label>Status</label>
+                <label>Statut</label>
                 <select
                   value={formData.statut}
                   onChange={(e) => setFormData({...formData, statut: e.target.value})}
                 >
-                  <option value="actif">Active</option>
-                  <option value="en_conge">On Leave</option>
-                  <option value="inactif">Inactive</option>
-                  <option value="suspendu">Suspended</option>
+                  <option value="actif">Actif</option>
+                  <option value="en_conge">Congé</option>
+                  <option value="inactif">Inactif</option>
+                  <option value="suspendu">Suspendu</option>
                 </select>
               </div>
               <div className="form-actions">
@@ -202,10 +195,10 @@ export default function GestionChauffeurs() {
                     setEditingChauffeur(null);
                   }}
                 >
-                  Cancel
+                  Annuler
                 </button>
                 <button type="submit" className="btn-primary">
-                  {editingChauffeur ? 'Update' : 'Create'}
+                  Enregistrer
                 </button>
               </div>
             </form>

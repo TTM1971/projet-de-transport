@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Card from '../components/Card';
-import DataTable from '../components/DataTable';
-import BackButton from '../components/BackButton';
-import './CommonPages.css';
-
+import { formatApiError } from '../utils/apiError';
 const API_URL = 'http://localhost:8000';
 
 export default function UserApproval() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     fetchPendingUsers();
@@ -22,29 +18,53 @@ export default function UserApproval() {
   const fetchPendingUsers = async () => {
     try {
       setLoading(true);
+      setErrorMessage('');
       const response = await axios.get(`${API_URL}/users/pending`);
       setPendingUsers(response.data);
     } catch (error) {
       console.error('Error:', error);
-      alert('Error loading pending accounts');
+      setErrorMessage(
+        formatApiError(
+          error.response?.data?.detail,
+          'Impossible de charger les comptes en attente.'
+        )
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleApprove = async (userId) => {
-    if (!window.confirm('Do you want to approve this account? The user will be able to log in after approval.')) {
+    if (!window.confirm('Approuver ce compte ? L’utilisateur pourra se connecter.')) {
       return;
     }
 
     try {
       await axios.post(`${API_URL}/users/${userId}/approve`);
-      alert('Account approved successfully!');
-      fetchPendingUsers(); // Reload list
+      alert('Compte approuvé.');
+      fetchPendingUsers();
     } catch (error) {
       console.error('Error:', error);
-      const errorMessage = error.response?.data?.detail || 'Error approving account';
-      alert('Error: ' + errorMessage);
+      alert('Erreur : ' + formatApiError(error.response?.data?.detail, "Impossible d'approuver le compte."));
+    }
+  };
+
+  const handleReject = async (userId, username) => {
+    if (
+      !window.confirm(
+        `Refuser et supprimer la demande pour « ${username} » ? Cette action est définitive (compte encore inactif uniquement).`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await axios.post(`${API_URL}/users/${userId}/reject`);
+      alert('Demande refusée — le compte a été supprimé.');
+      fetchPendingUsers();
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Erreur : ' + formatApiError(error.response?.data?.detail, 'Impossible de refuser ce compte.'));
     }
   };
 
@@ -84,16 +104,16 @@ export default function UserApproval() {
     { header: 'Full Name', field: 'full_name' },
     { header: 'Email', field: 'email_display' },
     { header: 'Role', field: 'role_display' },
+    { header: 'Ville', field: 'ville' },
     { header: 'Creation Date', field: 'created_at_display' }
   ];
 
-  // Vérifier les permissions
-  const canApprove = (pendingUser) => {
+  // Vérifier les permissions (mêmes règles qu’au backend pour approuver / refuser)
+  const canModerate = (pendingUser) => {
     if (user?.role === 'admin') {
-      return true; // Admin peut tout approuver
+      return true;
     }
     if (user?.role === 'gestionnaire') {
-      // Gestionnaire peut approuver uniquement agents et maintenance
       return ['agent', 'maintenance'].includes(pendingUser.role);
     }
     return false;
@@ -105,10 +125,14 @@ export default function UserApproval() {
     <div className="page-container">
       <div className="page-header">
         <h1>Account Approval</h1>
-        <BackButton />
       </div>
 
       <Card>
+        {errorMessage && (
+          <div style={{ marginBottom: '20px', padding: '12px 16px', backgroundColor: '#ffeaea', borderRadius: '4px', border: '1px solid #ffb3b3', color: '#9d1d1d' }}>
+            {errorMessage}
+          </div>
+        )}
         {pendingUsers.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
             <p>No accounts pending approval.</p>
@@ -117,18 +141,6 @@ export default function UserApproval() {
             </p>
           </div>
         ) : (
-          <>
-            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffc107' }}>
-              <p style={{ margin: 0, fontWeight: 500 }}>
-                {pendingUsers.length} account(s) pending approval
-              </p>
-              <p style={{ margin: '5px 0 0 0', fontSize: '0.9em', color: '#666' }}>
-                {user?.role === 'admin' 
-                  ? 'As administrator, you can approve all accounts.'
-                  : 'As manager, you can only approve agent and maintenance technician accounts.'}
-              </p>
-            </div>
-
             <div className="data-table-container">
               <table className="data-table">
                 <thead>
@@ -153,17 +165,28 @@ export default function UserApproval() {
                           <td key={colIdx}>{row[col.field]}</td>
                         ))}
                         <td className="actions">
-                          {canApprove(row) ? (
-                            <button
-                              className="btn-primary"
-                              onClick={() => handleApprove(row.id)}
-                              style={{ padding: '6px 12px', fontSize: '0.9em' }}
-                            >
-                              Approve
-                            </button>
+                          {canModerate(row) ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                              <button
+                                type="button"
+                                className="btn-primary"
+                                onClick={() => handleApprove(row.id)}
+                                style={{ padding: '6px 12px', fontSize: '0.9em', width: 'auto' }}
+                              >
+                                Approuver
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-delete"
+                                onClick={() => handleReject(row.id, row.username)}
+                                style={{ padding: '6px 12px', fontSize: '0.9em' }}
+                              >
+                                Rejeter
+                              </button>
+                            </div>
                           ) : (
                             <span style={{ color: '#999', fontSize: '0.9em', fontStyle: 'italic' }}>
-                              Not authorized
+                              Non autorisé
                             </span>
                           )}
                         </td>
@@ -173,7 +196,6 @@ export default function UserApproval() {
                 </tbody>
               </table>
             </div>
-          </>
         )}
       </Card>
     </div>

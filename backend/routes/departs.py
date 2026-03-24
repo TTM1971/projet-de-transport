@@ -5,12 +5,36 @@ from typing import List, Optional
 from database import get_db
 from models.depart import Depart as DepartModel
 from models.destination import Destination as DestinationModel
+from models.ligne import Ligne as LigneModel
 from models.bus_chauffeur import BusChauffeur as BusChauffeurModel
 from schemas.depart import DepartCreate, DepartUpdate, Depart as DepartSchema
 from datetime import datetime, date, time, timedelta
 from middleware.dependencies import get_current_user, require_gestionnaire_or_admin, require_admin
+from utils.driver_schedule import assert_no_driver_conflict, window_for_depart_fields
+from services.driver_schedule_ml import predict_block_minutes
 
 router = APIRouter()
+MANDATORY_BREAK_MINUTES = 180
+
+
+def _normalize_city(v: str | None) -> str | None:
+    if v is None:
+        return None
+    s = v.strip()
+    return s.lower() if s else None
+
+
+def _compute_effective_block_minutes_for_ligne(
+    db: Session,
+    ligne_id: int,
+    weekday: int,
+    hour_float: float,
+) -> int:
+    ml_block = int(predict_block_minutes(weekday, hour_float, ligne_id))
+    ligne = db.query(LigneModel).filter(LigneModel.id == ligne_id).first()
+    ligne_minutes = int(ligne.duree_minutes) if ligne and ligne.duree_minutes else 0
+    trip_minutes = max(ml_block, ligne_minutes)
+    return trip_minutes + MANDATORY_BREAK_MINUTES
 
 def get_bus_drivers(db: Session, bus_id: int):
     """
@@ -30,39 +54,86 @@ def get_bus_drivers(db: Session, bus_id: int):
     return drivers
 
 @router.get("/", response_model=List[DepartSchema])
-def list_departs(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def list_departs(
+    skip: int = 0,
+    limit: int = 100,
+    ville: str | None = None,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
     """Liste des départs - accessible à tous les utilisateurs authentifiés (agents peuvent consulter pour aider les clients)"""
-    departs = db.query(DepartModel).order_by(DepartModel.date_depart).offset(skip).limit(limit).all()
+    q = db.query(DepartModel)
+    role = getattr(current_user, "role", None)
+    city = None
+    if role in ("agent", "gestionnaire"):
+        city = _normalize_city(getattr(current_user, "ville", None))
+    elif role == "admin" and ville:
+        city = _normalize_city(ville)
+    if city:
+        city_ligne_ids = db.query(LigneModel.id).filter(func.lower(LigneModel.point_depart).like(f"{city},%")).subquery()
+        q = q.filter(DepartModel.ligne_id.in_(city_ligne_ids))
+    elif role in ("agent", "gestionnaire"):
+        q = q.filter(DepartModel.id == -1)
+    departs = q.order_by(DepartModel.date_depart).offset(skip).limit(limit).all()
     return departs
 
 @router.get("/date/{date_str}", response_model=List[DepartSchema])
-def list_departs_by_date(date_str: str, db: Session = Depends(get_db)):
+def list_departs_by_date(
+    date_str: str,
+    ville: str | None = None,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
     """Liste les départs pour une date spécifique (format: YYYY-MM-DD) - accessible aux agents pour consulter les horaires"""
     try:
         target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         start_datetime = datetime.combine(target_date, time.min)
         end_datetime = datetime.combine(target_date, time.max)
         
-        departs = db.query(DepartModel).filter(
+        q = db.query(DepartModel).filter(
             and_(
                 DepartModel.date_depart >= start_datetime,
                 DepartModel.date_depart <= end_datetime
             )
-        ).order_by(DepartModel.heure_depart).all()
+        )
+        role = getattr(current_user, "role", None)
+        city = None
+        if role in ("agent", "gestionnaire"):
+            city = _normalize_city(getattr(current_user, "ville", None))
+        elif role == "admin" and ville:
+            city = _normalize_city(ville)
+        if city:
+            city_ligne_ids = db.query(LigneModel.id).filter(func.lower(LigneModel.point_depart).like(f"{city},%")).subquery()
+            q = q.filter(DepartModel.ligne_id.in_(city_ligne_ids))
+        elif role in ("agent", "gestionnaire"):
+            q = q.filter(DepartModel.id == -1)
+        departs = q.order_by(DepartModel.heure_depart).all()
         return departs
     except ValueError:
         raise HTTPException(status_code=400, detail="Format de date invalide. Utilisez YYYY-MM-DD")
 
 @router.get("/ligne/{ligne_id}", response_model=List[DepartSchema])
-def list_departs_by_ligne(ligne_id: int, db: Session = Depends(get_db)):
+def list_departs_by_ligne(ligne_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    role = getattr(current_user, "role", None)
+    if role in ("agent", "gestionnaire"):
+        city = _normalize_city(getattr(current_user, "ville", None))
+        ligne = db.query(LigneModel).filter(LigneModel.id == ligne_id).first()
+        if not city or not ligne or not ligne.point_depart or _normalize_city(ligne.point_depart.split(",")[0]) != city:
+            raise HTTPException(status_code=403, detail="Accès interdit pour cette ligne")
     departs = db.query(DepartModel).filter(DepartModel.ligne_id == ligne_id).order_by(DepartModel.date_depart).all()
     return departs
 
 @router.get("/{depart_id}", response_model=DepartSchema)
-def get_depart(depart_id: int, db: Session = Depends(get_db)):
+def get_depart(depart_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     depart = db.query(DepartModel).filter(DepartModel.id == depart_id).first()
     if not depart:
         raise HTTPException(status_code=404, detail="Départ non trouvé")
+    role = getattr(current_user, "role", None)
+    if role in ("agent", "gestionnaire"):
+        city = _normalize_city(getattr(current_user, "ville", None))
+        ligne = db.query(LigneModel).filter(LigneModel.id == depart.ligne_id).first()
+        if not city or not ligne or _normalize_city((ligne.point_depart or "").split(",")[0]) != city:
+            raise HTTPException(status_code=403, detail="Accès interdit pour ce départ")
     return depart
 
 @router.get("/{depart_id}/billets/count")
@@ -155,7 +226,13 @@ def create_depart(depart: DepartCreate, db: Session = Depends(get_db), current_u
     # Vérifier que la date n'est pas dans le passé
     if date_depart < datetime.utcnow():
         raise HTTPException(status_code=400, detail="La date de départ ne peut pas être dans le passé")
-    
+
+    wd = date_depart.weekday()
+    hr = float(heure_time.hour + heure_time.minute / 60.0)
+    block = _compute_effective_block_minutes_for_ligne(db, depart.ligne_id, wd, hr)
+    ws, we = window_for_depart_fields(date_depart, heure_time, block)
+    assert_no_driver_conflict(db, chauffeur_id, ws, we, exclude_depart_id=None, block_minutes=block)
+
     db_depart = DepartModel(
         ligne_id=depart.ligne_id,
         destination_id=depart.destination_id,
@@ -297,6 +374,10 @@ def generate_future_departs(
 
 @router.put("/{depart_id}", response_model=DepartSchema)
 def update_depart(depart_id: int, depart_update: DepartUpdate, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+    from models.ligne import Ligne as LigneModel
+    from models.bus import Bus as BusModel
+    from models.chauffeur import Chauffeur as ChauffeurModel
+
     db_depart = db.query(DepartModel).filter(DepartModel.id == depart_id).first()
     if not db_depart:
         raise HTTPException(status_code=404, detail="Départ non trouvé")
@@ -376,10 +457,21 @@ def update_depart(depart_id: int, depart_update: DepartUpdate, db: Session = Dep
     # Vérifier que la date n'est pas dans le passé si elle est mise à jour
     if "date_depart" in update_data and update_data["date_depart"] < datetime.utcnow():
         raise HTTPException(status_code=400, detail="La date de départ ne peut pas être dans le passé")
-    
+
     for field, value in update_data.items():
         setattr(db_depart, field, value)
-    
+
+    # Conflits chauffeur après mise à jour
+    final_ch = db_depart.chauffeur_id
+    final_date = db_depart.date_depart
+    final_heure = db_depart.heure_depart
+    if final_ch and final_date and final_heure:
+        wd = final_date.weekday()
+        hr = float(final_heure.hour + final_heure.minute / 60.0)
+        block = _compute_effective_block_minutes_for_ligne(db, db_depart.ligne_id, wd, hr)
+        ws, we = window_for_depart_fields(final_date, final_heure, block)
+        assert_no_driver_conflict(db, final_ch, ws, we, exclude_depart_id=depart_id, block_minutes=block)
+
     db.commit()
     db.refresh(db_depart)
     return db_depart

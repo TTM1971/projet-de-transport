@@ -5,6 +5,7 @@ Usage: python create_user.py
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine, Base
 from models.user import User
+from models.chauffeur import Chauffeur as ChauffeurModel
 from auth.hash_password import hash_password
 
 # Créer les tables si elles n'existent pas
@@ -20,26 +21,44 @@ def create_default_users():
             "username": "admin",
             "password": "admin123",
             "role": "admin",
+            "ville": "Ottawa",
             "description": "👨‍💼 Administrateur - Accès complet au système"
         },
         {
-            "username": "agent",
+            "username": "agent_ottawa",
             "password": "agent123",
             "role": "agent",
-            "description": "💰 Agent de Vente - Vente de billets uniquement"
+            "ville": "Ottawa",
+            "description": "💰 Agent Ottawa - Vente de billets"
         },
         {
-            "username": "gestionnaire",
+            "username": "gestionnaire_ottawa",
             "password": "gest123",
             "role": "gestionnaire",
-            "description": "🚌 Gestionnaire de Flotte - Gestion bus, lignes, destinations"
+            "ville": "Ottawa",
+            "description": "🚌 Gestionnaire Ottawa - Gestion locale"
+        },
+        {
+            "username": "gestionnaire_montreal",
+            "password": "gest123",
+            "role": "gestionnaire",
+            "ville": "Montréal",
+            "description": "🚌 Gestionnaire Montréal - Gestion locale"
         },
         {
             "username": "maintenance",
             "password": "maint123",
             "role": "maintenance",
+            "ville": "Ottawa",
             "description": "🔧 Équipe Maintenance - Gestion atelier et maintenance"
-        }
+        },
+        {
+            "username": "chauffeur_demo",
+            "password": "chauffeur123",
+            "role": "chauffeur",
+            "ville": "Ottawa",
+            "description": "🚗 Chauffeur - Planning personnel et trajets",
+        },
     ]
     
     created_users = []
@@ -54,15 +73,28 @@ def create_default_users():
             existing = db.query(User).filter(User.username == user_data["username"]).first()
             
             if existing:
-                print(f"⚠️  L'utilisateur '{user_data['username']}' existe déjà (ID: {existing.id}, Rôle: {existing.role})")
+                # Réactiver les comptes de démo s'ils ont été désactivés (ex. flux d'approbation)
+                if not existing.is_active:
+                    existing.is_active = True
+                    db.commit()
+                    db.refresh(existing)
+                    print(
+                        f"✅ Compte '{user_data['username']}' réactivé (était inactif — connexion impossible avant)."
+                    )
+                else:
+                    print(
+                        f"⚠️  L'utilisateur '{user_data['username']}' existe déjà (ID: {existing.id}, Rôle: {existing.role})"
+                    )
                 created_users.append(existing)
                 continue
             
-            # Créer l'utilisateur
+            # Créer l'utilisateur (comptes de démo : actifs tout de suite)
             new_user = User(
                 username=user_data["username"],
                 hashed_password=hash_password(user_data["password"]),
-                role=user_data["role"]
+                role=user_data["role"],
+                ville=user_data.get("ville"),
+                is_active=True,
             )
             
             db.add(new_user)
@@ -95,8 +127,27 @@ def create_default_users():
         print("   Username: maintenance")
         print("   Password: maint123")
         print("   Accès: Maintenance, Suivi flotte (lecture)")
+        print("\n5. 🚗 CHAUFFEUR (démo)")
+        print("   Username: chauffeur_demo")
+        print("   Password: chauffeur123")
+        print("   Accès: Espace chauffeur (horaires, trajets)")
         print("\n" + "="*70)
-        
+
+        # Lier le compte chauffeur_demo à la première fiche chauffeur (si colonne user_id)
+        u_ch = db.query(User).filter(User.username == "chauffeur_demo").first()
+        ch = db.query(ChauffeurModel).order_by(ChauffeurModel.id).first()
+        if u_ch and ch and getattr(ch, "user_id", None) is None:
+            try:
+                ch.user_id = u_ch.id
+                db.commit()
+                print(f"\n✅ Compte chauffeur_demo lié au chauffeur ID {ch.id} ({ch.prenom} {ch.nom}).")
+            except Exception as ex:
+                db.rollback()
+                print(
+                    "\n⚠️  Impossible de lier chauffeur_demo (exécutez scripts/migrate_chauffeur_user_id.py puis relancez):",
+                    ex,
+                )
+
         return created_users
         
     except Exception as e:

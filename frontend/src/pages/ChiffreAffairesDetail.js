@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
 import Card from '../components/Card';
 import BackButton from '../components/BackButton';
 import { formatPrice } from '../utils/currency';
-import './CommonPages.css';
 
 const API_URL = 'http://localhost:8000';
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 export default function ChiffreAffairesDetail() {
   const navigate = useNavigate();
@@ -71,6 +82,31 @@ export default function ChiffreAffairesDetail() {
   if (loading) return <div className="loading">Loading...</div>;
   if (!data) return <div className="loading">No data available</div>;
 
+  const trendRows = [...(data.donnees_par_jour || [])].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const trendChartData = {
+    labels: trendRows.map((j) => new Date(j.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+    datasets: [
+      {
+        label: 'Turnover',
+        data: trendRows.map((j) => Number(j.chiffre_affaires_total || 0)),
+        borderColor: 'rgb(39, 174, 96)',
+        backgroundColor: 'rgba(39, 174, 96, 0.18)',
+        fill: true,
+        tension: 0.35,
+      },
+    ],
+  };
+  const trendChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' },
+    },
+    scales: {
+      y: { beginAtZero: true },
+    },
+  };
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -124,6 +160,12 @@ export default function ChiffreAffairesDetail() {
               {data.donnees_par_jour.length}
             </div>
           </div>
+        </div>
+      </Card>
+
+      <Card title="Turnover Trend">
+        <div className="chart-container">
+          <Line data={trendChartData} options={trendChartOptions} />
         </div>
       </Card>
 

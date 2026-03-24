@@ -1,8 +1,22 @@
+import os
+
+# Aide libpq sous Windows
+os.environ.setdefault("PGCLIENTENCODING", "UTF8")
+
 from sqlalchemy import create_engine
+from sqlalchemy.engine.url import URL
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-import os
+# psycopg3 en priorité (meilleur UTF-8 sous Windows) ; repli psycopg2 (images Docker non reconstruites)
+try:
+    import psycopg  # noqa: F401
+
+    _PSYCOPG_DRIVER = "postgresql+psycopg"
+    _USE_PSYCOPG3 = True
+except ImportError:
+    _PSYCOPG_DRIVER = "postgresql+psycopg2"
+    _USE_PSYCOPG3 = False
 
 # Configuration de la base PostgreSQL
 # Utilise 'database' pour Docker, 'localhost' pour le développement local
@@ -12,26 +26,53 @@ DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
 DB_NAME = os.getenv("DB_NAME", "transport_db")
 DB_PORT = os.getenv("DB_PORT", "5432")
 
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-# Création du moteur de connexion avec pool de connexions optimisé
-# Configuration améliorée pour éviter les erreurs "Broken pipe"
+def _db_port() -> int:
+    try:
+        return int(DB_PORT)
+    except (TypeError, ValueError):
+        return 5432
+
+
+def _build_database_url() -> URL:
+    """URL pour SQLAlchemy (échappe correctement le mot de passe)."""
+    return URL.create(
+        drivername=_PSYCOPG_DRIVER,
+        username=DB_USER or None,
+        password=DB_PASSWORD if DB_PASSWORD is not None else "",
+        host=DB_HOST or None,
+        port=_db_port(),
+        database=DB_NAME or None,
+    )
+
+
+DATABASE_URL = _build_database_url()
+
+# Arguments de connexion selon le pilote
+if _USE_PSYCOPG3:
+    _CONNECT_ARGS = {
+        "connect_timeout": 15,
+        "options": "-c statement_timeout=300000",
+    }
+else:
+    _CONNECT_ARGS = {
+        "connect_timeout": 15,
+        "options": "-c statement_timeout=300000",
+        "keepalives": 1,
+        "keepalives_idle": 30,
+        "keepalives_interval": 10,
+        "keepalives_count": 5,
+    }
+
 engine = create_engine(
     DATABASE_URL,
-    pool_size=15,  # Nombre de connexions à garder ouvertes (augmenté)
-    max_overflow=25,  # Nombre de connexions supplémentaires possibles (augmenté)
-    pool_pre_ping=True,  # Vérifier que les connexions sont valides avant utilisation
-    pool_recycle=1800,  # Recycler les connexions après 30 minutes (réduit pour éviter les connexions mortes)
-    pool_timeout=60,  # Timeout pour obtenir une connexion du pool (secondes, augmenté)
-    echo=False,  # Mettre à True pour voir les requêtes SQL dans les logs
-    connect_args={
-        "connect_timeout": 15,  # Timeout de connexion initial (secondes, augmenté)
-        "keepalives": 1,  # Activer keepalive pour détecter les connexions mortes
-        "keepalives_idle": 30,  # Secondes d'inactivité avant d'envoyer un keepalive
-        "keepalives_interval": 10,  # Intervalle entre les keepalives (secondes)
-        "keepalives_count": 5,  # Nombre de keepalives manqués avant de considérer la connexion morte
-        "options": "-c statement_timeout=300000"  # Timeout de 5 minutes pour les requêtes longues
-    }
+    pool_size=15,
+    max_overflow=25,
+    pool_pre_ping=True,
+    pool_recycle=1800,
+    pool_timeout=60,
+    echo=False,
+    connect_args=_CONNECT_ARGS,
 )
 
 # Session SQLAlchemy
@@ -41,6 +82,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 from sqlalchemy.orm import Session
 from fastapi import Depends
+
 
 def get_db():
     """
@@ -52,7 +94,7 @@ def get_db():
         yield db
         db.commit()  # Commit automatique si pas d'exception
     except Exception:
-        db.rollback()  # Rollback en cas d'erreur
+        db.rollback()  # Rollback en cas d'exception
         raise
     finally:
         db.close()  # Fermeture propre de la session

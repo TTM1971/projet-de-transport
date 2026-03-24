@@ -21,10 +21,12 @@ from .organization import Organization
 from .parametre import Parametre
 from .tarif import Tarif
 from .bus_chauffeur import BusChauffeur
+from .staff_shift import StaffShift
 
 __all__ = [
     "User", "Atelier", "Ping", "Bus", "Ligne", "Destination", 
     "Billet", "Chauffeur", "Depart", "Role", "Permission", 
     "Session", "AuditLog", "PasswordResetToken", "Organization",
-    "Parametre", "Tarif", "user_roles", "role_permissions", "BusChauffeur"
+    "Parametre", "Tarif", "user_roles", "role_permissions", "BusChauffeur",
+    "StaffShift",
 ]

@@ -16,6 +16,7 @@ class User(Base):
     last_name = Column(String)
     email = Column(String, unique=True, index=True)
     phone = Column(String)
+    ville = Column(String, index=True)
     avatar_url = Column(String)
     
     # Organisation

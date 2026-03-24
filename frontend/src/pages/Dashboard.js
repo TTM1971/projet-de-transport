@@ -6,8 +6,6 @@ import StatsWidget from '../components/StatsWidget';
 import Card from '../components/Card';
 import DashboardAdmin from '../components/DashboardAdmin';
 import { formatPrice } from '../utils/currency';
-import './Dashboard.css';
-
 const API_URL = 'http://localhost:8000';
 
 export default function Dashboard() {

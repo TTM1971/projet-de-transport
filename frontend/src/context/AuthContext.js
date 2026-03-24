@@ -1,13 +1,14 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
+import API_URL from '../config/api';
+import { formatLoginError } from '../utils/apiError';
 
 const AuthContext = createContext(null);
-
-const API_URL = 'http://localhost:8000';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [activeCity, setActiveCityState] = useState(localStorage.getItem('active_city') || '');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,6 +24,23 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    const interceptor = axios.interceptors.request.use((config) => {
+      if (
+        user?.role === 'admin' &&
+        activeCity &&
+        config?.url &&
+        config.url.startsWith(API_URL) &&
+        config.method?.toLowerCase() === 'get' &&
+        !config.url.includes('/villes')
+      ) {
+        config.params = { ...(config.params || {}), ville: activeCity };
+      }
+      return config;
+    });
+    return () => axios.interceptors.request.eject(interceptor);
+  }, [user?.role, activeCity]);
+
   const login = async (username, password) => {
     try {
       const response = await axios.post(`${API_URL}/auth/login`, {
@@ -30,14 +48,19 @@ export const AuthProvider = ({ children }) => {
         password
       });
       
-      const { access_token } = response.data;
+      const { access_token, user: apiUser } = response.data;
       setToken(access_token);
       localStorage.setItem('token', access_token);
       
       // Décoder le token pour obtenir les infos utilisateur (simplifié)
       // En production, vous devriez décoder le JWT côté serveur ou avoir un endpoint /me
       const payload = JSON.parse(atob(access_token.split('.')[1]));
-      const userData = { username: payload.sub, role: payload.role };
+      const userData = {
+        id: apiUser?.id,
+        username: apiUser?.username || payload.sub,
+        role: apiUser?.role || payload.role,
+        ville: apiUser?.ville || null,
+      };
       
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
@@ -45,9 +68,9 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true, user: userData };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.detail || 'Erreur de connexion' 
+      return {
+        success: false,
+        error: formatLoginError(error, 'Erreur de connexion'),
       };
     }
   };
@@ -55,9 +78,18 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
+    setActiveCityState('');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('active_city');
     delete axios.defaults.headers.common['Authorization'];
+  };
+
+  const setActiveCity = (city) => {
+    const v = (city || '').trim();
+    setActiveCityState(v);
+    if (v) localStorage.setItem('active_city', v);
+    else localStorage.removeItem('active_city');
   };
 
   const hasRole = (allowedRoles) => {
@@ -88,7 +120,8 @@ export const AuthProvider = ({ children }) => {
         'billets',             // Gestion des réservations et billets
         'billets_read',        // Consultation des billets
         'flotte',              // Vue d'ensemble sur l'état des véhicules
-        'flotte_read'          // Consultation de la flotte
+        'flotte_read',         // Consultation de la flotte
+        'horaires_equipe',     // Horaires agents + chauffeurs (pas les gestionnaires)
       ],
       
       // Agent : Accueil, assistance, vente de billets
@@ -111,7 +144,10 @@ export const AuthProvider = ({ children }) => {
         'flotte_read',         // Suivi des véhicules
         'bus_read',            // Consultation des véhicules
         'bus_update'           // Mise à jour statut des véhicules
-      ]
+      ],
+
+      // Chauffeur : planning personnel (pas d'accès gestion)
+      chauffeur: ['espace_chauffeur'],
     };
     
     // Admin a accès à tout
@@ -136,7 +172,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, hasRole, canAccess, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, hasRole, canAccess, loading, activeCity, setActiveCity }}>
       {children}
     </AuthContext.Provider>
   );

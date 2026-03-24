@@ -1,77 +1,124 @@
 # Projet de Transport Collectif
 
-Application web de gestion de transport collectif avec billetterie, suivi de flotte et gestion d'atelier.
+Application web complète de gestion d'exploitation transport:
+- billetterie
+- planification des chauffeurs et des équipes
+- suivi flotte / maintenance
+- analytics et audit
+- gestion multi-villes
 <img width="1299" height="592" alt="image" src="https://github.com/user-attachments/assets/a99c9455-625c-4161-8fcd-b54eefce4dbe" />
 
+## Stack technique
 
-##  Prérequis
+- Frontend: React
+- Backend: FastAPI + SQLAlchemy
+- Base de données: PostgreSQL
+- Orchestration locale: Docker Compose
+- Stockage objet technique: MinIO
 
-### Option 1 : Avec Docker (Recommandé)
-- [Docker](https://www.docker.com/get-started) (version 20.10+)
-- [Docker Compose](https://docs.docker.com/compose/install/) (version 2.0+)
+## Architecture
 
-### Option 2 : Sans Docker (Développement local)
+```
+projet-de-transport/
+├── frontend/                 # Interface React
+├── backend/                  # API FastAPI
+├── database/data/            # Données PostgreSQL persistées
+├── ingestion_pipeline/data/  # Données MinIO persistées
+├── docker-compose.yml
+├── compose.env.example
+└── README.md
+```
+
+## Prérequis
+
+### Option recommandee: Docker
+
+- Docker Desktop (ou moteur Docker)
+- Docker Compose v2+
+
+### Option locale sans Docker
+
 - Python 3.11+
 - Node.js 16+ et npm
 - PostgreSQL 14+
 
----
+## Demarrage rapide avec Docker
 
-##  Démarrage rapide avec Docker (Recommandé)
+### 1) Configurer l'environnement Compose
 
-### 1. Démarrer tous les services
+Depuis la racine du projet:
+
+```powershell
+copy compose.env.example .env
+```
+
+ou sous bash:
 
 ```bash
-# À la racine du projet
-docker-compose up --build
+cp compose.env.example .env
+```
 
-**Note** : Le frontend est maintenant géré par Docker ! Plus besoin de le démarrer séparément.
+Le fichier `.env` active `COMPOSE_BAKE=false` pour eviter des erreurs Compose sur certaines installations.
 
-### 3. Accéder aux services
+### 2) Lancer tous les services
 
-- **API Backend** : http://localhost:8000
-- **Documentation API** : http://localhost:8000/docs (Swagger UI)
-- **Frontend** : http://localhost:3000
-- **MinIO Console** : http://localhost:9001 (minioadmin / minioadmin)
+```bash
+docker compose up --build -d
+```
 
----
+### 3) Verifier les services
 
-##  Démarrage sans Docker (Développement local)
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- API: [http://localhost:8000](http://localhost:8000)
+- Swagger: [http://localhost:8000/docs](http://localhost:8000/docs)
+- MinIO Console: [http://localhost:9001](http://localhost:9001) (minioadmin / minioadmin)
 
+## Jeu de donnees de test Canada
 
-### 2. Configurer le backend
+Pour reinitialiser les donnees metier avec le jeu de test:
 
 ```bash
 cd backend
+python scripts/seed_canada_test_data.py
+```
 
-# Activer l'environnement virtuel (si existant)
-# Sur Windows PowerShell:
+Ce seed:
+- supprime les donnees d'exploitation existantes (departs, lignes, destinations, etc.)
+- regenere des donnees de test coherentes pour le Canada
+- conserve le cadre applicatif pour les tests fonctionnels
+
+## Lancement en local sans Docker
+
+### Backend
+
+```bash
+cd backend
+python -m venv venv
+```
+
+Activation:
+
+- PowerShell:
+```powershell
 .\venv\Scripts\Activate.ps1
-# Sur Windows CMD:
+```
+- CMD:
+```cmd
 venv\Scripts\activate.bat
-# Sur Linux/Mac:
+```
+- Linux/macOS:
+```bash
 source venv/bin/activate
-
-# Installer les dépendances
-pip install -r requirements.txt
-
-# Modifier database.py pour utiliser localhost au lieu de 'database'
-# DATABASE_URL = "postgresql://user:password@localhost:5432/transport_db"
 ```
 
-**Note** : Modifiez `backend/database.py` ligne 6 :
-```python
-DATABASE_URL = "postgresql://user:password@localhost:5432/transport_db"
-```
-
-### 3. Démarrer le backend
+Installation + demarrage:
 
 ```bash
-cd backend
+pip install -r requirements.txt
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 4. Démarrer le frontend
+### Frontend
 
 ```bash
 cd frontend
@@ -79,57 +126,55 @@ npm install
 npm start
 ```
 
+## Variables d'environnement
 
-##  Commandes Docker utiles
+### Racine
+
+- `compose.env.example`: variables lues par Docker Compose (notamment `COMPOSE_BAKE=false`)
+
+### Backend
+
+- `backend/.env.example`: exemples securite/CORS
+- En dev, les valeurs Docker du `docker-compose.yml` suffisent pour demarrer
+
+## Commandes utiles
 
 ```bash
-# Démarrer en arrière-plan
-docker-compose up -d
+# Logs
+docker compose logs -f
 
-# Voir les logs
-docker-compose logs -f
+# Logs d'un service
+docker compose logs -f backend
 
-# Arrêter les services
-docker-compose down
+# Arreter
+docker compose down
 
-# Reconstruire les images
-docker-compose build --no-cache
+# Rebuild propre
+docker compose build --no-cache
 
-# Accéder au conteneur backend
-docker-compose exec backend bash
+# Shell backend
+docker compose exec backend bash
 
-# Accéder à PostgreSQL
-docker-compose exec database psql -U user -d transport_db
+# Console postgres
+docker compose exec database psql -U user -d transport_db
 ```
 
----
+## Fonctionnalites metier principales
 
-##  Structure du projet
-
-```
-projet-de-transport/
-├── backend/              # API FastAPI
-│   ├── auth/            # Authentification JWT
-│   ├── models/          # Modèles SQLAlchemy
-│   ├── routes/          # Routes API
-│   ├── schemas/         # Schémas Pydantic
-│   └── main.py          # Point d'entrée
-├── frontend/            # Application React
-│   └── src/
-│       ├── pages/       # Pages de l'application
-│       └── components/  # Composants réutilisables
-├── database/            # Données PostgreSQL (volume Docker)
-├── ingestion_pipeline/  # Pipeline d'ingestion de données
-└── docker-compose.yml   # Configuration Docker
-```
-
----
+- Filtrage par ville et mode ville admin
+- Planification chauffeurs avec prevention des conflits horaires
+- Regle de pause obligatoire integree dans le blocage planning
+- Desassignation d'un trajet autorisee seulement au moins 2h avant depart
+- Audit admin des actions gestionnaires
 
 ## Notes importantes
 
-1. **Base de données** : Les données PostgreSQL sont persistées dans `./database/data/`
-2. **MinIO** : Utilisé pour le stockage d'objets (pipeline d'ingestion)
-3. **Variables d'environnement** : Pour la production, créez un fichier `.env` avec vos configurations
-4. **Ports** : Assurez-vous que les ports 3000, 5432, 8000, 9000, 9001 sont disponibles
+- Le dossier `ingestion_pipeline/data` est monte par le service MinIO de `docker-compose.yml`.
+- Les anciens scripts de lancement `scripts/docker-compose-up.*` ont ete retires et remplaces par la procedure `.env` + `docker compose up`.
+- Les donnees PostgreSQL locales sont dans `database/data/` et peuvent etre volumineuses.
 
----
+## Depannage rapide
+
+- Si l'UI ne charge pas: verifier `docker compose ps` puis `docker compose logs -f`.
+- Si l'API renvoie des erreurs CORS/Origin: verifier les variables de `backend/.env.example`.
+- Si les donnees semblent incoherentes: relancer le seed Canada puis rafraichir l'application.

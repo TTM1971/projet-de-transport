@@ -16,6 +16,14 @@ from typing import Optional
 
 router = APIRouter()
 
+
+def _normalize_city(v: Optional[str]) -> Optional[str]:
+    if v is None:
+        return None
+    s = v.strip()
+    return s if s else None
+
+
 @router.post("/register", response_model=UserResponse)
 def register(
     user_data: UserCreate,
@@ -33,6 +41,10 @@ def register(
         email_exist = db.query(User).filter(User.email == user_data.email).first()
         if email_exist:
             raise HTTPException(status_code=400, detail="Email déjà utilisé")
+
+    ville = _normalize_city(user_data.ville)
+    if not ville:
+        raise HTTPException(status_code=400, detail="La ville est obligatoire")
     
     user = User(
         username=user_data.username,
@@ -42,6 +54,7 @@ def register(
         first_name=user_data.first_name,
         last_name=user_data.last_name,
         phone=user_data.phone,
+        ville=ville,
         organization_id=user_data.organization_id,
         is_active=False  # Nouveaux comptes sont inactifs par défaut, nécessitent approbation
     )
@@ -110,7 +123,8 @@ def login(
             "id": user.id,
             "username": user.username,
             "email": user.email,
-            "role": user.role
+            "role": user.role,
+            "ville": user.ville,
         }
     }
 
@@ -136,6 +150,7 @@ def get_me(current_user = Depends(get_current_user)):
         "first_name": current_user.first_name,
         "last_name": current_user.last_name,
         "phone": current_user.phone,
+        "ville": current_user.ville,
         "role": current_user.role,
         "organization_id": current_user.organization_id,
         "is_active": current_user.is_active,

@@ -1,6 +1,4 @@
 import React from 'react';
-import './StatsWidget.css';
-
 export default function StatsWidget({ title, value, icon, color = '#4a90e2', onClick }) {
   return (
     <div 

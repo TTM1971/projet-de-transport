@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import DataTable from '../components/DataTable';
 import Card from '../components/Card';
 import BackButton from '../components/BackButton';
-import './CommonPages.css';
 
 const API_URL = 'http://localhost:8000';
 
@@ -15,9 +14,10 @@ export default function UserList() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({ username: '', password: '', role: 'agent' });
+  const [formData, setFormData] = useState({ username: '', password: '', role: 'agent', ville: '' });
+  const [villes, setVilles] = useState([]);
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => { fetchUsers(); fetchVilles(); }, []);
 
   // Fermer le modal quand on change de page
   useEffect(() => {
@@ -29,6 +29,15 @@ export default function UserList() {
       const res = await axios.get(`${API_URL}/users/`);
       setUsers(res.data);
     } catch (error) { alert('Error'); } finally { setLoading(false); }
+  };
+
+  const fetchVilles = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/villes`);
+      setVilles(res.data.active || []);
+    } catch {
+      setVilles([]);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -44,7 +53,7 @@ export default function UserList() {
       await axios.post(`${API_URL}/users/`, formData);
       alert('User created! The account is inactive and requires approval.');
       setShowModal(false);
-      setFormData({ username: '', password: '', role: 'agent' }); // Reset form
+      setFormData({ username: '', password: '', role: 'agent', ville: '' }); // Reset form
       fetchUsers();
     } catch (error) {
       const errorMessage = error.response?.data?.detail || 'Error creating account';
@@ -65,7 +74,8 @@ export default function UserList() {
   const columns = [
     { header: 'ID', field: 'id' },
     { header: 'Username', field: 'username' },
-    { header: 'Role', field: 'role' }
+    { header: 'Role', field: 'role' },
+    { header: 'Ville', field: 'ville' }
   ];
 
   if (loading) return <div className="loading">Loading...</div>;
@@ -91,6 +101,14 @@ export default function UserList() {
             <form onSubmit={handleSubmit}>
               <div className="form-group"><label>Username *</label><input required value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value})} /></div>
               <div className="form-group"><label>Password *</label><input type="password" required value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} /></div>
+              <div className="form-group"><label>Ville *</label>
+                <select required value={formData.ville} onChange={(e) => setFormData({...formData, ville: e.target.value})}>
+                  <option value="">-- Choisir --</option>
+                  {villes.map((v) => (
+                    <option key={v} value={v}>{v}</option>
+                  ))}
+                </select>
+              </div>
               <div className="form-group"><label>Role</label>
                 <select value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}>
                   <option value="agent">Agent</option>
