@@ -1,9 +1,7 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Logo from '../components/Logo';
-import './Login.css';
-
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -94,9 +92,11 @@ export default function Login() {
             <p><strong>Test Accounts:</strong></p>
             <ul>
               <li>Admin: <code>admin</code> / <code>admin123</code></li>
-              <li>Agent: <code>agent</code> / <code>agent123</code></li>
-              <li>Manager: <code>gestionnaire</code> / <code>gest123</code></li>
+              <li>Agent Ottawa: <code>agent_ottawa</code> / <code>agent123</code></li>
+              <li>Manager Ottawa: <code>gestionnaire_ottawa</code> / <code>gest123</code></li>
+              <li>Manager Montreal: <code>gestionnaire_montreal</code> / <code>gest123</code></li>
               <li>Maintenance: <code>maintenance</code> / <code>maint123</code></li>
+              <li>Chauffeur: <code>chauffeur_demo</code> / <code>chauffeur123</code></li>
             </ul>
           </div>
         </div>

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import Logo from '../components/Logo';
-import './Login.css';
-
+import { formatApiError } from '../utils/apiError';
 const API_URL = 'http://localhost:8000';
 
 export default function Register() {
@@ -11,10 +11,24 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('agent');
+  const [ville, setVille] = useState('');
+  const [villes, setVilles] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadVilles = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/villes`);
+        setVilles(res.data.active || []);
+      } catch (_) {
+        setVilles([]);
+      }
+    };
+    loadVilles();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,7 +52,8 @@ export default function Register() {
       const response = await axios.post(`${API_URL}/auth/register`, {
         username,
         password,
-        role
+        role,
+        ville
       });
       
       setSuccess(true);
@@ -46,7 +61,7 @@ export default function Register() {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Error creating account');
+      setError(formatApiError(err.response?.data?.detail, 'Erreur lors de la création du compte.'));
       setLoading(false);
     }
   };
@@ -118,6 +133,22 @@ export default function Register() {
                 required
                 disabled={loading}
               />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="ville">Ville</label>
+              <select
+                id="ville"
+                value={ville}
+                onChange={(e) => setVille(e.target.value)}
+                required
+                disabled={loading}
+              >
+                <option value="">-- Choisir --</option>
+                {villes.map((v) => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">

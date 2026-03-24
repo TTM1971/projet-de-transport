@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Card from '../components/Card';
 import { translateStatus, translateBreakdownType, translateSeverity } from '../utils/translations';
-import './CommonPages.css';
 
 const API_URL = 'http://localhost:8000';
 
@@ -281,7 +280,7 @@ export default function SuiviMaintenance() {
               </div>
 
               <div className="form-group">
-                <label>Intervention Cost (CAD)</label>
+                <label>Intervention Cost</label>
                 <input
                   type="number"
                   step="0.01"

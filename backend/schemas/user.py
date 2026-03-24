@@ -8,6 +8,7 @@ class UserBase(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     phone: Optional[str] = None
+    ville: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
@@ -20,6 +21,7 @@ class UserUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     phone: Optional[str] = None
+    ville: Optional[str] = None
     avatar_url: Optional[str] = None
     organization_id: Optional[int] = None
     is_active: Optional[bool] = None

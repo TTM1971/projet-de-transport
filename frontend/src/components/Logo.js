@@ -1,6 +1,4 @@
 import React from 'react';
-import './Logo.css';
-
 export default function Logo({ variant = 'default' }) {
   // variant peut être 'default', 'large', 'small', 'compact'
   

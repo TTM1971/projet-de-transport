@@ -4,7 +4,6 @@ import axios from 'axios';
 import DataTable from '../components/DataTable';
 import Card from '../components/Card';
 import { formatPrice } from '../utils/currency';
-import './CommonPages.css';
 
 const API_URL = 'http://localhost:8000';
 

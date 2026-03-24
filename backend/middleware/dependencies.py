@@ -5,6 +5,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User as UserModel
+from models.chauffeur import Chauffeur as ChauffeurModel
 from middleware.audit_logger import log_audit
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
@@ -66,3 +67,22 @@ def require_maintenance_or_admin():
 
 def require_gestionnaire_maintenance_or_admin():
     return require_role(["gestionnaire", "maintenance", "admin"])
+
+
+def get_current_chauffeur_profile(
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+):
+    """Utilisateur connecté avec rôle chauffeur + fiche Chauffeur liée (user_id)."""
+    if getattr(current_user, "role", None) != "chauffeur":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès réservé aux comptes chauffeur",
+        )
+    ch = db.query(ChauffeurModel).filter(ChauffeurModel.user_id == current_user.id).first()
+    if not ch:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Profil chauffeur non lié à ce compte. Contactez un administrateur.",
+        )
+    return ch

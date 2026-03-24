@@ -1,3 +1,5 @@
+# Pour éviter l'erreur Docker Compose "failed to execute bake: read |0: file already closed",
+# lancez avec COMPOSE_BAKE=false (voir README.md).
 services:
   frontend:
     build:

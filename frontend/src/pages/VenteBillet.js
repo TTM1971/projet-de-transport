@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import Card from '../components/Card';
 import Logo from '../components/Logo';
 import { formatPrice } from '../utils/currency';
-import './CommonPages.css';
 
 const API_URL = 'http://localhost:8000';
 
@@ -29,7 +28,6 @@ export default function VenteBillet() {
     mode_paiement: 'espece'
   });
   const [billetCreated, setBilletCreated] = useState(null);
-  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     fetchInitialData();
@@ -56,20 +54,19 @@ export default function VenteBillet() {
 
   const fetchInitialData = async () => {
     try {
-      const [departsRes, lignesRes, destRes, busesRes, chauffeursRes, usersRes] = await Promise.all([
+      // Ne pas appeler GET /users/ : réservé aux admins (403 pour les agents)
+      const [departsRes, lignesRes, destRes, busesRes, chauffeursRes] = await Promise.all([
         axios.get(`${API_URL}/departs/`),
         axios.get(`${API_URL}/lignes/`),
         axios.get(`${API_URL}/destinations/`),
         axios.get(`${API_URL}/bus/`),
-        axios.get(`${API_URL}/chauffeurs/`),
-        axios.get(`${API_URL}/users/`)
+        axios.get(`${API_URL}/chauffeurs/`)
       ]);
       setDeparts(departsRes.data);
       setLignes(lignesRes.data.filter(l => l.statut === 'active'));
       setDestinations(destRes.data);
       setBuses(busesRes.data);
       setChauffeurs(chauffeursRes.data);
-      setUsers(usersRes.data);
       setLoading(false);
     } catch (error) {
       console.error('Error:', error);
@@ -155,35 +152,19 @@ export default function VenteBillet() {
     }
 
     try {
-      // Récupérer l'agent_id depuis l'utilisateur connecté
+      // Récupérer l'ID utilisateur via /auth/me (accessible à tous les rôles connectés)
       let currentUser = null;
-      
-      // D'abord, essayer de trouver dans la liste des users chargés
-      if (users && users.length > 0 && user?.username) {
-        currentUser = users.find(u => u.username === user.username);
-      }
-      
-      // Si non trouvé, utiliser l'endpoint /auth/me pour obtenir les infos complètes
-      if (!currentUser || !currentUser.id) {
-        try {
-          const userResponse = await axios.get(`${API_URL}/auth/me`);
-          currentUser = {
-            id: userResponse.data.id,
-            username: userResponse.data.username,
-            role: userResponse.data.role
-          };
-        } catch (userError) {
-          console.error('Error retrieving user:', userError);
-          // If /auth/me endpoint doesn't work, try to find in users by username
-          if (users && users.length > 0 && user?.username) {
-            currentUser = users.find(u => u.username === user.username);
-          }
-          
-          if (!currentUser || !currentUser.id) {
-            alert('Error: Unable to retrieve user information. Please log in again.');
-            return;
-          }
-        }
+      try {
+        const userResponse = await axios.get(`${API_URL}/auth/me`);
+        currentUser = {
+          id: userResponse.data.id,
+          username: userResponse.data.username,
+          role: userResponse.data.role
+        };
+      } catch (userError) {
+        console.error('Error retrieving user:', userError);
+        alert('Impossible de récupérer votre profil. Reconnectez-vous.');
+        return;
       }
 
       // Validate departure data
@@ -527,7 +508,7 @@ export default function VenteBillet() {
                     required
                     value={formData.telephone_client}
                     onChange={(e) => setFormData({...formData, telephone_client: e.target.value})}
-                    placeholder="Ex: +237 6XX XXX XXX"
+                    placeholder="Ex: +1 (416) 555-0100"
                   />
                 </div>
 

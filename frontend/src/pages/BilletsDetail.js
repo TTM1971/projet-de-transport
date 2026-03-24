@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Bar } from 'react-chartjs-2';
 import Card from '../components/Card';
 import BackButton from '../components/BackButton';
 import { formatPrice } from '../utils/currency';
-import './CommonPages.css';
 
 const API_URL = 'http://localhost:8000';
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function BilletsDetail() {
   const navigate = useNavigate();
@@ -76,6 +86,30 @@ export default function BilletsDetail() {
   if (loading) return <div className="loading">Loading...</div>;
   if (!data) return <div className="loading">No data available</div>;
 
+  const trendRows = [...(data.donnees_par_jour || [])].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const ticketsChartData = {
+    labels: trendRows.map((j) => new Date(j.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+    datasets: [
+      {
+        label: 'Tickets',
+        data: trendRows.map((j) => Number(j.nombre_transactions || 0)),
+        backgroundColor: 'rgba(243, 156, 18, 0.6)',
+        borderColor: 'rgb(243, 156, 18)',
+        borderWidth: 1,
+      },
+    ],
+  };
+  const ticketsChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' },
+    },
+    scales: {
+      y: { beginAtZero: true },
+    },
+  };
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -131,6 +165,12 @@ export default function BilletsDetail() {
               {data.donnees_par_jour.length}
             </div>
           </div>
+        </div>
+      </Card>
+
+      <Card title="Tickets Trend">
+        <div className="chart-container">
+          <Bar data={ticketsChartData} options={ticketsChartOptions} />
         </div>
       </Card>
 

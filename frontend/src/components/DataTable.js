@@ -1,6 +1,4 @@
 import React from 'react';
-import './DataTable.css';
-
 export default function DataTable({ columns, data, onEdit, onDelete, onRowClick }) {
   return (
     <div className="data-table-container">

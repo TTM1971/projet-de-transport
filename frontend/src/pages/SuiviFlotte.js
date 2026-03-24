@@ -3,7 +3,6 @@ import axios from 'axios';
 import Card from '../components/Card';
 import StatsWidget from '../components/StatsWidget';
 import { translateStatus } from '../utils/translations';
-import './CommonPages.css';
 
 const API_URL = 'http://localhost:8000';
 

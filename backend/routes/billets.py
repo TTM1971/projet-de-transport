@@ -2,21 +2,46 @@ from fastapi import APIRouter, Depends, HTTPException
 from schemas.billet import Billet, BilletCreate, BilletUpdate
 from typing import List
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from database import get_db
 from models.billet import Billet as BilletModel
 from models.depart import Depart as DepartModel
+from models.ligne import Ligne as LigneModel
 from datetime import datetime
 from middleware.dependencies import get_current_user, require_agent_or_admin, require_gestionnaire_or_admin
 import uuid
 
 router = APIRouter()
 
+
+def _normalize_city(v: str | None) -> str | None:
+    if v is None:
+        return None
+    s = v.strip()
+    return s.lower() if s else None
+
 @router.get("/", response_model=List[Billet])
-def list_billets(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def list_billets(
+    skip: int = 0,
+    limit: int = 100,
+    ville: str | None = None,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+):
     """Liste des billets - Admin et Gestionnaire voient tous les billets, Agents voient les leurs"""
     # Les agents voient seulement leurs billets
     if hasattr(current_user, 'role') and current_user.role == 'agent':
         billets = db.query(BilletModel).filter(BilletModel.agent_id == current_user.id).offset(skip).limit(limit).all()
+    elif hasattr(current_user, 'role') and current_user.role == 'gestionnaire':
+        city = _normalize_city(getattr(current_user, "ville", None))
+        if not city:
+            return []
+        city_ligne_ids = db.query(LigneModel.id).filter(func.lower(LigneModel.point_depart).like(f"{city},%")).subquery()
+        billets = db.query(BilletModel).filter(BilletModel.ligne_id.in_(city_ligne_ids)).offset(skip).limit(limit).all()
+    elif hasattr(current_user, 'role') and current_user.role == 'admin' and ville:
+        city = _normalize_city(ville)
+        city_ligne_ids = db.query(LigneModel.id).filter(func.lower(LigneModel.point_depart).like(f"{city},%")).subquery()
+        billets = db.query(BilletModel).filter(BilletModel.ligne_id.in_(city_ligne_ids)).offset(skip).limit(limit).all()
     else:
         billets = db.query(BilletModel).offset(skip).limit(limit).all()
     return billets

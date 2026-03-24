@@ -11,6 +11,58 @@ from middleware.dependencies import get_current_user
 
 router = APIRouter()
 
+
+@router.get("/gestionnaires/activites")
+def get_managers_activity(
+    days: int = Query(default=30, ge=1, le=365),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Vue admin: gestionnaires par ville + ce qu'ils ont fait récemment."""
+    if not hasattr(current_user, "role") or current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Accès refusé - Admin uniquement")
+
+    since = datetime.utcnow() - timedelta(days=days)
+    managers = db.query(UserModel).filter(UserModel.role == "gestionnaire").order_by(UserModel.username).all()
+    out = []
+    for m in managers:
+        logs = (
+            db.query(AuditLogModel)
+            .filter(AuditLogModel.user_id == m.id, AuditLogModel.created_at >= since)
+            .order_by(AuditLogModel.created_at.desc())
+            .limit(50)
+            .all()
+        )
+        actions_count = {}
+        for lg in logs:
+            actions_count[lg.action] = actions_count.get(lg.action, 0) + 1
+        out.append(
+            {
+                "manager": {
+                    "id": m.id,
+                    "username": m.username,
+                    "first_name": m.first_name,
+                    "last_name": m.last_name,
+                    "ville": m.ville,
+                },
+                "total_actions": len(logs),
+                "actions_count": actions_count,
+                "recent_actions": [
+                    {
+                        "id": lg.id,
+                        "created_at": lg.created_at,
+                        "action": lg.action,
+                        "resource_type": lg.resource_type,
+                        "resource_id": lg.resource_id,
+                        "details": lg.details,
+                    }
+                    for lg in logs[:10]
+                ],
+            }
+        )
+
+    return {"period_days": days, "gestionnaires": out}
+
 @router.get("/", response_model=List[AuditLog])
 def list_audit_logs(
     skip: int = 0,

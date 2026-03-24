@@ -15,6 +15,11 @@ passlib[bcrypt]==1.7.4
 typing_extensions==4.12.2
 python-dateutil==2.9.0.post0
 
+# Planification chauffeurs (ML)
+scikit-learn==1.5.2
+joblib==1.4.2
+numpy==1.26.4
+
 # Note: Les dépendances ML/Analytics (pandas, numpy, torch, etc.) 
 # sont dans requirements.txt pour la production complète
 # mais commentées dans le Dockerfile pour accélérer le build

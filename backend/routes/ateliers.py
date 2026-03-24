@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, Depends, HTTPException
 from schemas.atelier import AtelierCreate, AtelierUpdate, Atelier as AtelierSchema
 from models.atelier import Atelier as AtelierModel

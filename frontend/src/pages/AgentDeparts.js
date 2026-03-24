@@ -5,7 +5,6 @@ import Card from '../components/Card';
 import DataTable from '../components/DataTable';
 import BackButton from '../components/BackButton';
 import { formatPrice } from '../utils/currency';
-import './CommonPages.css';
 
 const API_URL = 'http://localhost:8000';
 

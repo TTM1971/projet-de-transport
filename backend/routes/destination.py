@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List
 from database import get_db
 from models.destination import Destination as DestinationModel
@@ -8,18 +9,47 @@ from middleware.dependencies import get_current_user, require_gestionnaire_or_ad
 
 router = APIRouter()
 
+
+def _normalize_city(v: str | None) -> str | None:
+    if v is None:
+        return None
+    s = v.strip()
+    return s.lower() if s else None
+
 @router.get("/", response_model=List[DestinationSchema])
-def list_destinations(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def list_destinations(
+    skip: int = 0,
+    limit: int = 100,
+    ville: str | None = None,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
     """Liste des destinations - accessible à tous pour consultation (agents peuvent consulter pour aider les clients)"""
-    destinations = db.query(DestinationModel).offset(skip).limit(limit).all()
+    q = db.query(DestinationModel)
+    role = getattr(current_user, "role", None)
+    city = None
+    if role in ("agent", "gestionnaire"):
+        city = _normalize_city(getattr(current_user, "ville", None))
+    elif role == "admin" and ville:
+        city = _normalize_city(ville)
+    if city:
+        q = q.filter(func.lower(DestinationModel.ville) == city)
+    elif role in ("agent", "gestionnaire"):
+        q = q.filter(DestinationModel.id == -1)
+    destinations = q.offset(skip).limit(limit).all()
     return destinations
 
 @router.get("/{dest_id}", response_model=DestinationSchema)
-def get_destination(dest_id: int, db: Session = Depends(get_db)):
+def get_destination(dest_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     """Détails d'une destination - accessible à tous pour consultation"""
     destination = db.query(DestinationModel).filter(DestinationModel.id == dest_id).first()
     if not destination:
         raise HTTPException(status_code=404, detail="Destination non trouvée")
+    role = getattr(current_user, "role", None)
+    if role in ("agent", "gestionnaire"):
+        city = _normalize_city(getattr(current_user, "ville", None))
+        if not city or _normalize_city(destination.ville) != city:
+            raise HTTPException(status_code=403, detail="Accès interdit pour cette ville")
     return destination
 
 @router.post("/", response_model=DestinationSchema)
@@ -43,6 +73,12 @@ def create_destination(destination: DestinationCreate, db: Session = Depends(get
     destination_data['nom'] = destination_data['nom'].strip()
     if destination_data.get('ville'):
         destination_data['ville'] = destination_data['ville'].strip()
+    if getattr(current_user, "role", None) == "gestionnaire":
+        manager_city = _normalize_city(getattr(current_user, "ville", None))
+        if not manager_city:
+            raise HTTPException(status_code=400, detail="Votre compte gestionnaire n'a pas de ville configurée")
+        if _normalize_city(destination_data.get("ville")) != manager_city:
+            raise HTTPException(status_code=403, detail="Un gestionnaire ne peut créer que des destinations de sa ville")
     
     db_destination = DestinationModel(**destination_data)
     db.add(db_destination)
@@ -55,6 +91,10 @@ def update_destination(dest_id: int, dest_update: DestinationUpdate, db: Session
     db_destination = db.query(DestinationModel).filter(DestinationModel.id == dest_id).first()
     if not db_destination:
         raise HTTPException(status_code=404, detail="Destination non trouvée")
+    if getattr(current_user, "role", None) == "gestionnaire":
+        manager_city = _normalize_city(getattr(current_user, "ville", None))
+        if not manager_city or _normalize_city(db_destination.ville) != manager_city:
+            raise HTTPException(status_code=403, detail="Vous ne pouvez modifier que les destinations de votre ville")
     
     update_data = dest_update.model_dump(exclude_unset=True)
     
@@ -91,6 +131,10 @@ def delete_destination(dest_id: int, db: Session = Depends(get_db), current_user
     db_destination = db.query(DestinationModel).filter(DestinationModel.id == dest_id).first()
     if not db_destination:
         raise HTTPException(status_code=404, detail="Destination non trouvée")
+    if getattr(current_user, "role", None) == "gestionnaire":
+        manager_city = _normalize_city(getattr(current_user, "ville", None))
+        if not manager_city or _normalize_city(db_destination.ville) != manager_city:
+            raise HTTPException(status_code=403, detail="Vous ne pouvez supprimer que les destinations de votre ville")
     
     db.delete(db_destination)
     db.commit()

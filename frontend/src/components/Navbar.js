@@ -1,38 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Logo from './Logo';
-import './Navbar.css';
-
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const { user, logout, canAccess } = useAuth();
+  const { user, logout, canAccess, activeCity, setActiveCity } = useAuth();
   const navigate = useNavigate();
-  const gestionDropdownRef = useRef(null);
-  const suiviDropdownRef = useRef(null);
-  const adminDropdownRef = useRef(null);
-
-  // Fermer les dropdowns quand on clique en dehors
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (openDropdown === 'gestion' && gestionDropdownRef.current && !gestionDropdownRef.current.contains(event.target)) {
-        setOpenDropdown(null);
-      } else if (openDropdown === 'suivi' && suiviDropdownRef.current && !suiviDropdownRef.current.contains(event.target)) {
-        setOpenDropdown(null);
-      } else if (openDropdown === 'admin' && adminDropdownRef.current && !adminDropdownRef.current.contains(event.target)) {
-        setOpenDropdown(null);
-      }
-    };
-
-    if (openDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [openDropdown]);
 
   const handleLogout = () => {
     logout();
@@ -42,87 +14,171 @@ export default function Navbar() {
 
   if (!user) return null;
 
-  const toggleDropdown = (dropdownName) => {
-    setOpenDropdown(openDropdown === dropdownName ? null : dropdownName);
-  };
+  const navClass = ({ isActive }) =>
+    isActive ? 'nav-link active' : 'nav-link';
 
   const getRoleLabel = (role) => {
     const labels = {
       admin: 'Administrator',
       agent: 'Agent',
       gestionnaire: 'Manager',
-      maintenance: 'Maintenance'
+      maintenance: 'Maintenance',
+      chauffeur: 'Chauffeur',
     };
     return labels[role] || role;
   };
 
   return (
-    <nav className="navbar">
-      <div className="navbar-brand">
-        <Link to="/dashboard" className="brand-link">
-          <Logo variant="compact" />
-        </Link>
-      </div>
-      <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)}>
-        Menu
-      </button>
-      <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
-        {canAccess('dashboard') && (
-          <Link to="/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</Link>
-        )}
-        {canAccess('vente') && (
-          <Link to="/vente" onClick={() => setMenuOpen(false)}>Ticket Sales</Link>
-        )}
-        {(canAccess('bus') || canAccess('lignes') || canAccess('destinations') || canAccess('departs') || canAccess('departs_read') || canAccess('billets_read')) && (
-          <div className="nav-dropdown" ref={gestionDropdownRef}>
-            <span onClick={() => toggleDropdown('gestion')}>Management</span>
-            {openDropdown === 'gestion' && (
-            <div className="dropdown-content">
-                {canAccess('bus') && <Link to="/bus" onClick={() => { setMenuOpen(false); setOpenDropdown(null); }}>Buses</Link>}
-                {canAccess('lignes') && <Link to="/lignes" onClick={() => { setMenuOpen(false); setOpenDropdown(null); }}>Lines</Link>}
-                {(canAccess('departs') || canAccess('departs_read')) && (
-                  <Link to="/departs" onClick={() => { setMenuOpen(false); setOpenDropdown(null); }}>
-                    {canAccess('departs') ? 'Departures' : 'Schedules & Routes'}
-                  </Link>
-                )}
-                {canAccess('chauffeurs') && <Link to="/chauffeurs" onClick={() => { setMenuOpen(false); setOpenDropdown(null); }}>Drivers</Link>}
-                {canAccess('destinations') && <Link to="/destinations" onClick={() => { setMenuOpen(false); setOpenDropdown(null); }}>Destinations</Link>}
-                {canAccess('billets_read') && <Link to="/billets" onClick={() => { setMenuOpen(false); setOpenDropdown(null); }}>Tickets</Link>}
-            </div>
-            )}
-          </div>
-        )}
-        {(canAccess('flotte') || canAccess('maintenance')) && (
-          <div className="nav-dropdown" ref={suiviDropdownRef}>
-            <span onClick={() => toggleDropdown('suivi')}>Monitoring</span>
-            {openDropdown === 'suivi' && (
-            <div className="dropdown-content">
-                {canAccess('flotte') && <Link to="/suivi-flotte" onClick={() => { setMenuOpen(false); setOpenDropdown(null); }}>Fleet</Link>}
-                {canAccess('maintenance') && <Link to="/maintenance" onClick={() => { setMenuOpen(false); setOpenDropdown(null); }}>Maintenance</Link>}
-            </div>
-            )}
-          </div>
-        )}
-        {(user.role === 'admin' || user.role === 'gestionnaire') && (
-          <div className="nav-dropdown" ref={adminDropdownRef}>
-            <span onClick={() => toggleDropdown('admin')}>{user.role === 'admin' ? 'Administration' : 'Admin'}</span>
-            {openDropdown === 'admin' && (
-            <div className="dropdown-content">
-                {user.role === 'admin' && <Link to="/users" onClick={() => { setMenuOpen(false); setOpenDropdown(null); }}>Users</Link>}
-                <Link to="/users/approval" onClick={() => { setMenuOpen(false); setOpenDropdown(null); }}>
-                  Account Approval
-                  {user.role === 'gestionnaire' ? ' (Agents/Maintenance)' : ''}
-                </Link>
-            </div>
-            )}
-          </div>
-        )}
-        <div className="user-info">
-          <span className="user-role-label">{getRoleLabel(user.role)}</span>
-          <span className="username">{user.username}</span>
-          <button className="btn-logout" onClick={handleLogout}>Logout</button>
+    <>
+      <header className="topbar">
+        <div className="topbar-brand">
+          <span className="app-name">MEGANE</span>
         </div>
-      </div>
-    </nav>
+        <div className="topbar-user">
+          <span className="user-role">{getRoleLabel(user.role)}</span>
+          <span className="user-avatar">{(user.username || 'U').charAt(0).toUpperCase()}</span>
+          <button type="button" className="btn-logout btn-logout--topbar" onClick={handleLogout}>
+            Déconnexion
+          </button>
+        </div>
+      </header>
+
+      <nav className="sidebar">
+        <div className="sidebar-header">
+          <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)}>
+            Menu
+          </button>
+        </div>
+        <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
+          {user.role === 'chauffeur' && (
+            <NavLink to="/espace-chauffeur" end className={navClass} onClick={() => setMenuOpen(false)}>
+              Espace chauffeur
+            </NavLink>
+          )}
+          {user.role === 'admin' && !activeCity && (
+            <>
+              <NavLink to="/dashboard" end={false} className={navClass} onClick={() => setMenuOpen(false)}>
+                Dashboard
+              </NavLink>
+              <NavLink to="/horaires-equipe" className={navClass} onClick={() => setMenuOpen(false)}>
+                Horaires équipe
+              </NavLink>
+              <NavLink to="/villes" end className={navClass} onClick={() => setMenuOpen(false)}>
+                Villes
+              </NavLink>
+            </>
+          )}
+          {user.role === 'admin' && !!activeCity && (
+            <>
+              <div className="nav-link" style={{ fontSize: 12, opacity: 0.8 }}>
+                Ville active: <strong>{activeCity}</strong>
+              </div>
+              <button className="btn-secondary" style={{ margin: '6px 10px' }} onClick={() => { setActiveCity(''); navigate('/villes'); }}>
+                Changer de ville
+              </button>
+              <NavLink to="/dashboard" end={false} className={navClass} onClick={() => setMenuOpen(false)}>
+                Dashboard
+              </NavLink>
+              <NavLink to="/bus" end={false} className={navClass} onClick={() => setMenuOpen(false)}>
+                Bus
+              </NavLink>
+              <NavLink to="/lignes" className={navClass} onClick={() => setMenuOpen(false)}>
+                Lignes
+              </NavLink>
+              <NavLink to="/departs" end={false} className={navClass} onClick={() => setMenuOpen(false)}>
+                Departs
+              </NavLink>
+              <NavLink to="/chauffeurs" className={navClass} onClick={() => setMenuOpen(false)}>
+                Chauffeurs
+              </NavLink>
+              <NavLink to="/horaires-equipe" className={navClass} onClick={() => setMenuOpen(false)}>
+                Horaires équipe
+              </NavLink>
+              <NavLink to="/destinations" className={navClass} onClick={() => setMenuOpen(false)}>
+                Destinations
+              </NavLink>
+              <NavLink to="/billets" end={false} className={navClass} onClick={() => setMenuOpen(false)}>
+                Billets
+              </NavLink>
+              <NavLink to="/suivi-flotte" end className={navClass} onClick={() => setMenuOpen(false)}>
+                Suivi Flotte
+              </NavLink>
+              <NavLink to="/maintenance" end={false} className={navClass} onClick={() => setMenuOpen(false)}>
+                Maintenance
+              </NavLink>
+              <NavLink to="/users" end className={navClass} onClick={() => setMenuOpen(false)}>
+                Utilisateurs
+              </NavLink>
+            </>
+          )}
+          {user.role !== 'chauffeur' && user.role !== 'admin' && (
+            <>
+          {canAccess('dashboard') && (
+            <NavLink to="/dashboard" end={false} className={navClass} onClick={() => setMenuOpen(false)}>
+              Dashboard
+            </NavLink>
+          )}
+          {canAccess('vente') && (
+            <NavLink to="/vente" end className={navClass} onClick={() => setMenuOpen(false)}>
+              Ventes
+            </NavLink>
+          )}
+          {canAccess('bus') && (
+            <NavLink to="/bus" end={false} className={navClass} onClick={() => setMenuOpen(false)}>
+              Bus
+            </NavLink>
+          )}
+          {canAccess('lignes') && (
+            <NavLink to="/lignes" className={navClass} onClick={() => setMenuOpen(false)}>
+              Lignes
+            </NavLink>
+          )}
+          {(canAccess('departs') || canAccess('departs_read')) && (
+            <NavLink to="/departs" end={false} className={navClass} onClick={() => setMenuOpen(false)}>
+              Departs
+            </NavLink>
+          )}
+          {canAccess('chauffeurs') && (
+            <NavLink to="/chauffeurs" className={navClass} onClick={() => setMenuOpen(false)}>
+              Chauffeurs
+            </NavLink>
+          )}
+          {canAccess('horaires_equipe') && (
+            <NavLink to="/horaires-equipe" className={navClass} onClick={() => setMenuOpen(false)}>
+              Horaires équipe
+            </NavLink>
+          )}
+          {canAccess('destinations') && (
+            <NavLink to="/destinations" className={navClass} onClick={() => setMenuOpen(false)}>
+              Destinations
+            </NavLink>
+          )}
+          {canAccess('billets_read') && (
+            <NavLink to="/billets" end={false} className={navClass} onClick={() => setMenuOpen(false)}>
+              Billets
+            </NavLink>
+          )}
+          {canAccess('flotte') && (
+            <NavLink to="/suivi-flotte" end className={navClass} onClick={() => setMenuOpen(false)}>
+              Suivi Flotte
+            </NavLink>
+          )}
+          {canAccess('maintenance') && (
+            <NavLink to="/maintenance" end={false} className={navClass} onClick={() => setMenuOpen(false)}>
+              Maintenance
+            </NavLink>
+          )}
+          {user.role === 'gestionnaire' && (
+            <>
+              <NavLink to="/users/approval" end className={navClass} onClick={() => setMenuOpen(false)}>
+                Validation Comptes
+              </NavLink>
+            </>
+          )}
+            </>
+          )}
+        </div>
+      </nav>
+    </>
   );
 }

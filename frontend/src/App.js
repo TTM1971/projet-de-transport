@@ -28,7 +28,17 @@ import TrajetsJourDetail from './pages/TrajetsJourDetail';
 import AgentDeparts from './pages/AgentDeparts';
 import UserApproval from './pages/UserApproval';
 import GenerateDeparts from './pages/GenerateDeparts';
-import './App.css';
+import ChauffeurPlanning from './pages/ChauffeurPlanning';
+import ChauffeurEspace from './pages/ChauffeurEspace';
+import HorairesEquipe from './pages/HorairesEquipe';
+import VillesAdmin from './pages/VillesAdmin';
+import DashboardVille from './pages/DashboardVille';
+
+function defaultHomeForRole(role) {
+  if (role === 'agent') return '/vente';
+  if (role === 'chauffeur') return '/espace-chauffeur';
+  return '/dashboard';
+}
 
 function AppRoutes() {
   const { user } = useAuth();
@@ -36,11 +46,11 @@ function AppRoutes() {
   return (
     <Router>
       {user && <Navbar />}
-      <div className="app-content">
+      <div className={`app-content ${user ? 'with-shell' : ''}`}>
         <Routes>
-          <Route path="/login" element={user ? <Navigate to={user.role === 'agent' ? "/vente" : "/dashboard"} replace /> : <Login />} />
-          <Route path="/register" element={user ? <Navigate to={user.role === 'agent' ? "/vente" : "/dashboard"} replace /> : <Register />} />
-          <Route path="/" element={<Navigate to={user ? (user.role === 'agent' ? "/vente" : "/dashboard") : "/login"} replace />} />
+          <Route path="/login" element={user ? <Navigate to={defaultHomeForRole(user.role)} replace /> : <Login />} />
+          <Route path="/register" element={user ? <Navigate to={defaultHomeForRole(user.role)} replace /> : <Register />} />
+          <Route path="/" element={<Navigate to={user ? defaultHomeForRole(user.role) : "/login"} replace />} />
           
           {/* Routes protégées par rôle */}
           <Route path="/dashboard" element={
@@ -100,6 +110,36 @@ function AppRoutes() {
           <Route path="/chauffeurs" element={
             <ProtectedRoute allowedRoles={['admin', 'gestionnaire']} permission="chauffeurs">
               <GestionChauffeurs />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/chauffeurs/:chauffeurId/planning" element={
+            <ProtectedRoute allowedRoles={['admin', 'gestionnaire']} permission="chauffeurs">
+              <ChauffeurPlanning />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/horaires-equipe" element={
+            <ProtectedRoute allowedRoles={['admin', 'gestionnaire']} permission="horaires_equipe">
+              <HorairesEquipe />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/villes" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <VillesAdmin />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/dashboard/ville/:ville" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <DashboardVille />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/espace-chauffeur" element={
+            <ProtectedRoute allowedRoles={['chauffeur']} permission="espace_chauffeur">
+              <ChauffeurEspace />
             </ProtectedRoute>
           } />
           

@@ -1,14 +1,12 @@
 import React from 'react';
 import Logo from '../components/Logo';
-import '../App.css';
-
 export default function Home() {
   return (
-    <div className="App">
-      <header className="App-header">
+    <div className="min-h-screen bg-[#282c34] text-white">
+      <header className="flex min-h-screen flex-col items-center justify-center gap-2 p-8 text-center">
         <Logo variant="large" />
-        <p style={{ fontSize: '1.1em', marginTop: '20px' }}>Collective Transport Management System</p>
-        <p>Web application prototype for ticket management and bus tracking.</p>
+        <p className="mt-5 text-lg">Collective Transport Management System</p>
+        <p className="text-white/80">Web application prototype for ticket management and bus tracking.</p>
       </header>
     </div>
   );
