@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import Logo from '../components/Logo';
 import { formatApiError } from '../utils/apiError';
-const API_URL = 'http://localhost:8000';
+import API_URL from '../config/api';
 
 export default function Register() {
   const [username, setUsername] = useState('');
@@ -21,7 +21,7 @@ export default function Register() {
   useEffect(() => {
     const loadVilles = async () => {
       try {
-        const res = await axios.get(`${API_URL}/villes`);
+        const res = await axios.get(`${API_URL}/villes/`);
         setVilles(res.data.active || []);
       } catch (_) {
         setVilles([]);

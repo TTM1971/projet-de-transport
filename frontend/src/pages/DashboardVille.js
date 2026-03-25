@@ -12,16 +12,23 @@ export default function DashboardVille() {
   const [summary, setSummary] = useState(null);
   const [historical, setHistorical] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     (async () => {
       try {
+        setLoadError('');
         const [s, h] = await Promise.all([
           axios.get(`${API_URL}/analytics/dashboard/summary?ville=${encodeURIComponent(city)}`),
           axios.get(`${API_URL}/analytics/dashboard/historical?days=30&ville=${encodeURIComponent(city)}`),
         ]);
         setSummary(s.data);
         setHistorical(h.data?.data || []);
+      } catch (e) {
+        console.error(e);
+        setLoadError(
+          "Impossible de charger le dashboard. Vérifiez que l'API est démarrée (port 8000)."
+        );
       } finally {
         setLoading(false);
       }
@@ -35,6 +42,12 @@ export default function DashboardVille() {
       <div className="page-header">
         <h1>Dashboard - {city}</h1>
       </div>
+
+      {loadError && (
+        <div className="error-message" style={{ marginBottom: 16 }}>
+          {loadError}
+        </div>
+      )}
 
       {summary && (
         <div className="stats-grid">

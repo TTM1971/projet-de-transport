@@ -5,8 +5,7 @@ import Card from '../components/Card';
 import BackButton from '../components/BackButton';
 import { formatPrice } from '../utils/currency';
 import { translateBreakdownType } from '../utils/translations';
-
-const API_URL = 'http://localhost:8000';
+import API_URL from '../config/api';
 
 export default function BusDetails() {
   const { busId } = useParams();

@@ -8,7 +8,7 @@ from models.atelier import Atelier as AtelierModel
 from models.bus_chauffeur import BusChauffeur as BusChauffeurModel
 from models.chauffeur import Chauffeur as ChauffeurModel
 from schemas.bus import BusCreate, BusUpdate, Bus as BusSchema
-from middleware.dependencies import get_current_user, require_gestionnaire_or_admin
+from middleware.dependencies import get_current_user, gestionnaire_or_admin_only
 
 router = APIRouter()
 
@@ -104,7 +104,7 @@ def get_bus_chauffeurs(bus_id: int, db: Session = Depends(get_db)):
     }
 
 @router.post("/", response_model=BusSchema)
-def create_bus(bus: BusCreate, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+def create_bus(bus: BusCreate, db: Session = Depends(get_db), current_user = Depends(gestionnaire_or_admin_only)):
     # Validation de l'immatriculation
     if not bus.immatriculation or not bus.immatriculation.strip():
         raise HTTPException(status_code=400, detail="L'immatriculation est obligatoire")
@@ -139,7 +139,7 @@ def create_bus(bus: BusCreate, db: Session = Depends(get_db), current_user = Dep
     return db_bus
 
 @router.put("/{bus_id}", response_model=BusSchema)
-def update_bus(bus_id: int, bus_update: BusUpdate, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+def update_bus(bus_id: int, bus_update: BusUpdate, db: Session = Depends(get_db), current_user = Depends(gestionnaire_or_admin_only)):
     db_bus = db.query(BusModel).filter(BusModel.id == bus_id).first()
     if not db_bus:
         raise HTTPException(status_code=404, detail="Bus non trouvé")
@@ -184,7 +184,7 @@ def update_bus(bus_id: int, bus_update: BusUpdate, db: Session = Depends(get_db)
     return db_bus
 
 @router.delete("/{bus_id}")
-def delete_bus(bus_id: int, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+def delete_bus(bus_id: int, db: Session = Depends(get_db), current_user = Depends(gestionnaire_or_admin_only)):
     db_bus = db.query(BusModel).filter(BusModel.id == bus_id).first()
     if not db_bus:
         raise HTTPException(status_code=404, detail="Bus non trouvé")

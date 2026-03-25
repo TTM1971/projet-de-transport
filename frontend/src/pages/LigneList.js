@@ -3,8 +3,7 @@ import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import DataTable from '../components/DataTable';
 import Card from '../components/Card';
-
-const API_URL = 'http://localhost:8000';
+import API_URL from '../config/api';
 
 export default function LigneList() {
   const location = useLocation();

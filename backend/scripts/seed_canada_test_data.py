@@ -1,6 +1,6 @@
 """
 Réinitialise les données d'exploitation (trajets, lignes, bus, conducteurs) et insère un jeu de test CANADA.
-Conserve les comptes utilisateurs existants (admin, agent, etc.).
+À la fin, crée ou met à jour les comptes de démo (admin, agent_ottawa, etc.) pour correspondre à la page de connexion.
 
 Usage (depuis le dossier backend, avec DB accessible) :
   python scripts/seed_canada_test_data.py
@@ -32,6 +32,8 @@ from models import (
 from models.pings import Ping
 from models.staff_shift import StaffShift
 from models.tarif import Tarif
+
+from create_user import create_default_users
 
 
 def ensure_schema_compat() -> None:
@@ -227,6 +229,8 @@ def main():
         seed_canada(db)
     finally:
         db.close()
+
+    create_default_users()
 
 
 if __name__ == "__main__":

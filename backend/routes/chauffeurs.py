@@ -16,7 +16,7 @@ from schemas.chauffeur import (
     Chauffeur as ChauffeurSchema,
     LinkChauffeurUser,
 )
-from middleware.dependencies import get_current_user, require_gestionnaire_or_admin, require_admin
+from middleware.dependencies import get_current_user, gestionnaire_or_admin_only, admin_only
 from middleware.audit_logger import log_audit
 from utils.driver_schedule import assert_no_driver_conflict, window_for_depart_fields
 from services.driver_schedule_ml import (
@@ -118,7 +118,7 @@ def _enrich_depart_admin(db: Session, d: DepartModel) -> dict:
 def list_chauffeur_planning_departs(
     chauffeur_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_gestionnaire_or_admin),
+    current_user=Depends(gestionnaire_or_admin_only),
     futures_seulement: bool = False,
 ):
     """Tous les départs assignés à ce chauffeur (vue admin)."""
@@ -138,7 +138,7 @@ def assign_depart_to_chauffeur(
     chauffeur_id: int,
     body: AssignDepartBody,
     db: Session = Depends(get_db),
-    current_user=Depends(require_gestionnaire_or_admin),
+    current_user=Depends(gestionnaire_or_admin_only),
 ):
     """Attribue un départ existant à ce chauffeur (vérifie les conflits d'horaire)."""
     ch = db.query(ChauffeurModel).filter(ChauffeurModel.id == chauffeur_id).first()
@@ -212,7 +212,7 @@ def unassign_depart_from_chauffeur(
     chauffeur_id: int,
     depart_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_gestionnaire_or_admin),
+    current_user=Depends(gestionnaire_or_admin_only),
 ):
     """Retire un départ d'un chauffeur si le départ est à plus de 2h."""
     ch = db.query(ChauffeurModel).filter(ChauffeurModel.id == chauffeur_id).first()
@@ -277,7 +277,7 @@ def unassign_depart_from_chauffeur(
 def train_driver_schedule_ml(
     chauffeur_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(admin_only),
 ):
     """Entraîne le modèle RandomForest sur l'historique des départs (tous chauffeurs)."""
     ch = db.query(ChauffeurModel).filter(ChauffeurModel.id == chauffeur_id).first()
@@ -291,7 +291,7 @@ def suggest_hours_ml(
     chauffeur_id: int,
     body: MlSuggestBody,
     db: Session = Depends(get_db),
-    current_user=Depends(require_gestionnaire_or_admin),
+    current_user=Depends(gestionnaire_or_admin_only),
 ):
     """
     Propose des créneaux horaires classés par score ML pour une ligne et une date,
@@ -354,7 +354,7 @@ def link_chauffeur_to_user(
     chauffeur_id: int,
     body: LinkChauffeurUser,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(admin_only),
 ):
     """Lie un utilisateur (rôle chauffeur) à la fiche Chauffeur pour l'espace conducteur."""
     ch = db.query(ChauffeurModel).filter(ChauffeurModel.id == chauffeur_id).first()
@@ -394,7 +394,7 @@ def create_chauffeur_disabled():
     )
 
 @router.put("/{chauffeur_id}", response_model=ChauffeurSchema)
-def update_chauffeur(chauffeur_id: int, chauffeur_update: ChauffeurUpdate, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+def update_chauffeur(chauffeur_id: int, chauffeur_update: ChauffeurUpdate, db: Session = Depends(get_db), current_user = Depends(gestionnaire_or_admin_only)):
     db_chauffeur = db.query(ChauffeurModel).filter(ChauffeurModel.id == chauffeur_id).first()
     if not db_chauffeur:
         raise HTTPException(status_code=404, detail="Chauffeur non trouvé")
@@ -408,7 +408,7 @@ def update_chauffeur(chauffeur_id: int, chauffeur_update: ChauffeurUpdate, db: S
     return db_chauffeur
 
 @router.delete("/{chauffeur_id}")
-def delete_chauffeur(chauffeur_id: int, db: Session = Depends(get_db), current_user = Depends(require_admin)):
+def delete_chauffeur(chauffeur_id: int, db: Session = Depends(get_db), current_user = Depends(admin_only)):
     db_chauffeur = db.query(ChauffeurModel).filter(ChauffeurModel.id == chauffeur_id).first()
     if not db_chauffeur:
         raise HTTPException(status_code=404, detail="Chauffeur non trouvé")

@@ -12,7 +12,7 @@ import Card from '../components/Card';
  * - Admin : + gestionnaires.
  */
 export default function HorairesEquipe() {
-  const { user } = useAuth();
+  const { user, token, activeCity } = useAuth();
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,12 +35,30 @@ export default function HorairesEquipe() {
 
   useEffect(() => {
     let c = false;
+    if (!token) {
+      setLoading(false);
+      setError("Session expirée ou absente. Reconnectez-vous pour charger les horaires.");
+      return () => {
+        c = true;
+      };
+    }
     (async () => {
       try {
+        setError('');
+        setLoading(true);
         const res = await axios.get(`${API_URL}/planning/schedulable-overview`);
         if (!c) setOverview(res.data);
       } catch (e) {
-        if (!c) setError(formatApiError(e.response?.data?.detail, 'Chargement impossible'));
+        if (c) return;
+        if (e.response) {
+          setError(formatApiError(e.response?.data?.detail, `Erreur ${e.response.status}`));
+        } else if (e.code === 'ERR_NETWORK' || (e.message || '').includes('Network Error')) {
+          setError(
+            "Impossible de joindre l'API planning. Vérifiez que le backend répond via /api (Docker: ouvrez l'app sur http://localhost, puis contrôlez que les conteneurs backend/nginx sont démarrés).",
+          );
+        } else {
+          setError(e.message || 'Chargement impossible');
+        }
       } finally {
         if (!c) setLoading(false);
       }
@@ -48,7 +66,7 @@ export default function HorairesEquipe() {
     return () => {
       c = true;
     };
-  }, []);
+  }, [user?.role, token, activeCity]);
 
   const loadShifts = async (uid) => {
     setSelectedUserId(uid);

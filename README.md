@@ -27,7 +27,9 @@ projet-de-transport/
 ├── ingestion_pipeline/data/  # Données MinIO persistées
 ├── docker-compose.yml        # Développement (React en mode dev sur :3000)
 ├── docker-compose.prod.yml   # Production locale : build statique servi par Nginx
-├── compose.env.example
+├── .env.example              # Modèle pour ".env" à la racine (Compose)
+├── compose.env.example       # Idem (raccourci)
+├── compose.prod.env.example    # Modèle prod / docker-compose.prod.yml
 └── README.md
 ```
 
@@ -48,19 +50,19 @@ projet-de-transport/
 
 ### 1) Configurer l'environnement Compose
 
-Depuis la racine du projet:
+Depuis la racine du projet, copiez le modèle vers `.env` (non versionné) :
 
 ```powershell
-copy compose.env.example .env
+copy .env.example .env
 ```
 
-ou sous bash:
+ou : `copy compose.env.example .env` (équivalent).
 
-```bash
-cp compose.env.example .env
-```
+Sous bash : `cp .env.example .env`
 
-Le fichier `.env` active `COMPOSE_BAKE=false` pour eviter des erreurs Compose sur certaines installations.
+Le fichier `.env` active au minimum `COMPOSE_BAKE=false` pour éviter certaines erreurs Compose. Détails et options : voir `.env.example`.
+
+Modèles complémentaires : `compose.prod.env.example`, `backend/.env.example`, `frontend/.env.example`.
 
 ### 2) Lancer tous les services
 
@@ -97,7 +99,7 @@ docker compose -f docker-compose.prod.yml up --build -d
 
 - Application : [http://localhost](http://localhost) (même schéma `/api/...`).
 - Le service `frontend-build` copie une fois le résultat de `npm run build` dans un volume partagé avec Nginx ; la config utilisée est `nginx/conf.d/transport.static.conf`.
-- Le backend est lancé avec **Gunicorn** et des workers **Uvicorn** (`uvicorn.workers.UvicornWorker`). Le nombre de workers est réglé par la variable d’environnement **`WEB_CONCURRENCY`** dans `docker-compose.prod.yml` (par défaut `2`).
+- Le backend est lancé avec **Gunicorn** et **2** workers **Uvicorn** (`uvicorn.workers.UvicornWorker`) ; modifiez l’argument `-w` dans `docker-compose.prod.yml` si besoin.
 - Arrêt : `docker compose -f docker-compose.prod.yml down` (le volume nommé `frontend_dist` peut être supprimé avec `down -v` pour forcer un rebuild front au prochain démarrage).
 
 Sur un **serveur de production**, adaptez `CORS_ORIGINS`, TLS (`nginx/ssl.conf.example`), et évitez d’exposer les ports internes (8000, 5432) publiquement si ce n’est pas nécessaire.
@@ -114,7 +116,9 @@ python scripts/seed_canada_test_data.py
 Ce seed:
 - supprime les donnees d'exploitation existantes (departs, lignes, destinations, etc.)
 - regenere des donnees de test coherentes pour le Canada
-- conserve le cadre applicatif pour les tests fonctionnels
+- cree ou reinitialise les **comptes de demo** (memes identifiants que sur la page de connexion : `admin` / `admin123`, etc.)
+
+Avec Docker, depuis la racine du depot : `docker compose exec backend python scripts/seed_canada_test_data.py`
 
 ## Lancement en local sans Docker
 
@@ -237,6 +241,12 @@ python scripts/smoke_checks.py
 
 ## Depannage rapide
 
+- **Backend unhealthy** / logs : `password authentication failed for user "user"` : les données dans `database/data/` viennent d’une init PostgreSQL avec un **autre** mot de passe que `DB_PASSWORD` dans le compose. **Option A** — réinitialiser le rôle (depuis la machine hôte, base déjà démarrée) :
+  ```bash
+  docker compose exec database psql -U user -d transport_db -c "ALTER USER \"user\" WITH PASSWORD 'password';"
+  ```
+  Remplacez `password` par la valeur de `DB_PASSWORD` dans votre `docker-compose.yml` si vous l’avez changée. Puis `docker compose restart backend`. **Option B** — repartir sur une base vide : `docker compose down`, vider ou supprimer `database/data/`, puis `docker compose up -d` (**perte de toutes les données locales**).
+- 504 / `ERR_EMPTY_RESPONSE` sur `/api/...` : verifier que le backend est **healthy** (`docker compose ps`), consulter `docker compose logs -f backend`. Le `docker-compose.yml` lance l’API **sans** `--reload` par défaut (le reload sur volume évite les redémarrages intempestifs) ; tester l’API : `http://localhost:8000/health` ou `http://localhost/api/health` via Nginx.
 - Si l'UI ne charge pas: verifier `docker compose ps` puis `docker compose logs -f`.
 - Si l'API renvoie des erreurs CORS/Origin: verifier les variables de `backend/.env.example`.
 - Si les donnees semblent incoherentes: relancer le seed Canada puis rafraichir l'application.

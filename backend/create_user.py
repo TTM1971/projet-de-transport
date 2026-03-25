@@ -69,39 +69,36 @@ def create_default_users():
         print("="*70 + "\n")
         
         for user_data in users_to_create:
-            # Vérifier si l'utilisateur existe déjà
             existing = db.query(User).filter(User.username == user_data["username"]).first()
-            
+            hp = hash_password(user_data["password"])
+
             if existing:
-                # Réactiver les comptes de démo s'ils ont été désactivés (ex. flux d'approbation)
-                if not existing.is_active:
-                    existing.is_active = True
-                    db.commit()
-                    db.refresh(existing)
-                    print(
-                        f"✅ Compte '{user_data['username']}' réactivé (était inactif — connexion impossible avant)."
-                    )
-                else:
-                    print(
-                        f"⚠️  L'utilisateur '{user_data['username']}' existe déjà (ID: {existing.id}, Rôle: {existing.role})"
-                    )
+                # Toujours réaligner mot de passe / rôle / ville (base réinitialisée ou hash obsolète)
+                existing.hashed_password = hp
+                existing.role = user_data["role"]
+                existing.ville = user_data.get("ville")
+                existing.is_active = True
+                db.commit()
+                db.refresh(existing)
                 created_users.append(existing)
+                print(f"✅ Compte '{user_data['username']}' mis à jour (mot de passe de démo réappliqué).")
+                print(f"   Rôle: {user_data['role']} — {user_data['password']}")
+                print()
                 continue
-            
-            # Créer l'utilisateur (comptes de démo : actifs tout de suite)
+
             new_user = User(
                 username=user_data["username"],
-                hashed_password=hash_password(user_data["password"]),
+                hashed_password=hp,
                 role=user_data["role"],
                 ville=user_data.get("ville"),
                 is_active=True,
             )
-            
+
             db.add(new_user)
             db.commit()
             db.refresh(new_user)
             created_users.append(new_user)
-            
+
             print(f"✅ {user_data['description']}")
             print(f"   Username: {user_data['username']}")
             print(f"   Password: {user_data['password']}")
@@ -115,12 +112,12 @@ def create_default_users():
         print("   Username: admin")
         print("   Password: admin123")
         print("   Accès: TOUT (Dashboard, Gestion complète, Utilisateurs)")
-        print("\n2. 💰 AGENT DE VENTE")
-        print("   Username: agent")
+        print("\n2. 💰 AGENT DE VENTE (Ottawa)")
+        print("   Username: agent_ottawa")
         print("   Password: agent123")
         print("   Accès: Vente de billets uniquement")
-        print("\n3. 🚌 GESTIONNAIRE DE FLOTTE")
-        print("   Username: gestionnaire")
+        print("\n3. 🚌 GESTIONNAIRE DE FLOTTE (ex. Ottawa)")
+        print("   Username: gestionnaire_ottawa")
         print("   Password: gest123")
         print("   Accès: Bus, Lignes, Destinations, Suivi flotte")
         print("\n4. 🔧 ÉQUIPE MAINTENANCE")

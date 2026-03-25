@@ -9,8 +9,10 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
     depends_on:
-      - frontend
-      - backend
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
   frontend:
@@ -30,7 +32,8 @@ services:
       - ./frontend:/app
       - /app/node_modules
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
     stdin_open: true
     tty: true
@@ -58,7 +61,19 @@ services:
       - ./backend:/app
       # Exclure venv du volume pour éviter les conflits
       - /app/venv
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    # Sans --reload : le hot-reload sur volume Windows/Mac redémarre souvent l’API → 504 / ERR_EMPTY_RESPONSE.
+    # Pour le rechargement auto : command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5).read()\"",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 6
+      start_period: 60s
     restart: unless-stopped
 
   database:
@@ -94,7 +109,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U user -d transport_db"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 8
+      start_period: 40s
     restart: unless-stopped
 
   minio:

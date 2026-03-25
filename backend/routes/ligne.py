@@ -5,7 +5,7 @@ from typing import List
 from database import get_db
 from models.ligne import Ligne as LigneModel
 from schemas.ligne import LigneCreate, LigneUpdate, Ligne as LigneSchema
-from middleware.dependencies import get_current_user, require_gestionnaire_or_admin
+from middleware.dependencies import get_current_user, gestionnaire_or_admin_only
 
 router = APIRouter()
 
@@ -59,7 +59,7 @@ def get_ligne(ligne_id: int, db: Session = Depends(get_db), current_user=Depends
     return ligne
 
 @router.post("/", response_model=LigneSchema)
-def create_ligne(ligne: LigneCreate, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+def create_ligne(ligne: LigneCreate, db: Session = Depends(get_db), current_user = Depends(gestionnaire_or_admin_only)):
     # Validation du numéro de ligne
     if not ligne.numero or not str(ligne.numero).strip():
         raise HTTPException(status_code=400, detail="Le numéro de ligne est obligatoire")
@@ -98,7 +98,7 @@ def create_ligne(ligne: LigneCreate, db: Session = Depends(get_db), current_user
     return db_ligne
 
 @router.put("/{ligne_id}", response_model=LigneSchema)
-def update_ligne(ligne_id: int, ligne_update: LigneUpdate, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+def update_ligne(ligne_id: int, ligne_update: LigneUpdate, db: Session = Depends(get_db), current_user = Depends(gestionnaire_or_admin_only)):
     db_ligne = db.query(LigneModel).filter(LigneModel.id == ligne_id).first()
     if not db_ligne:
         raise HTTPException(status_code=404, detail="Ligne non trouvée")
@@ -117,7 +117,7 @@ def update_ligne(ligne_id: int, ligne_update: LigneUpdate, db: Session = Depends
     return db_ligne
 
 @router.delete("/{ligne_id}")
-def delete_ligne(ligne_id: int, db: Session = Depends(get_db), current_user = Depends(require_gestionnaire_or_admin)):
+def delete_ligne(ligne_id: int, db: Session = Depends(get_db), current_user = Depends(gestionnaire_or_admin_only)):
     db_ligne = db.query(LigneModel).filter(LigneModel.id == ligne_id).first()
     if not db_ligne:
         raise HTTPException(status_code=404, detail="Ligne non trouvée")

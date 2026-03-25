@@ -4,6 +4,7 @@ import axios from 'axios';
 import Card from '../components/Card';
 import API_URL from '../config/api';
 import { useAuth } from '../context/AuthContext';
+import { formatApiError } from '../utils/apiError';
 
 export default function VillesAdmin() {
   const navigate = useNavigate();
@@ -12,9 +13,10 @@ export default function VillesAdmin() {
   const [available, setAvailable] = useState([]);
   const [selected, setSelected] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   const load = async () => {
-    const res = await axios.get(`${API_URL}/villes`);
+    const res = await axios.get(`${API_URL}/villes/`);
     setActive(res.data.active || []);
     setAvailable(res.data.available_to_add || []);
   };
@@ -22,7 +24,24 @@ export default function VillesAdmin() {
   useEffect(() => {
     (async () => {
       try {
+        setLoadError('');
         await load();
+      } catch (e) {
+        console.error(e);
+        if (e.response) {
+          setLoadError(
+            formatApiError(
+              e.response.data?.detail,
+              `Erreur ${e.response.status}`,
+            ),
+          );
+        } else if (e.code === 'ERR_NETWORK' || (e.message || '').includes('Network Error')) {
+          setLoadError(
+            "Impossible de joindre l'API. Lancez la stack : « docker compose up -d » depuis la racine du projet, ou uvicorn sur le port 8000. Si vous utilisez le frontend dans Docker, ouvrez l'app via http://localhost (Nginx) ou http://localhost:3000 ; vérifiez les logs du conteneur frontend ([setupProxy] doit pointer vers le backend).",
+          );
+        } else {
+          setLoadError(e.message || 'Erreur lors du chargement des villes.');
+        }
       } finally {
         setLoading(false);
       }
@@ -32,7 +51,7 @@ export default function VillesAdmin() {
   const addVille = async (e) => {
     e.preventDefault();
     if (!selected) return;
-    await axios.post(`${API_URL}/villes`, { ville: selected });
+    await axios.post(`${API_URL}/villes/`, { ville: selected });
     setSelected('');
     await load();
   };
@@ -44,6 +63,12 @@ export default function VillesAdmin() {
       <div className="page-header">
         <h1>Villes</h1>
       </div>
+
+      {loadError && (
+        <div className="error-message" style={{ marginBottom: 16 }}>
+          {loadError}
+        </div>
+      )}
 
       <Card title="Ajouter une ville">
         <form onSubmit={addVille} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>

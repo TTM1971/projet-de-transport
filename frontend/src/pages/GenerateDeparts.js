@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Card from '../components/Card';
 import BackButton from '../components/BackButton';
-
-const API_URL = 'http://localhost:8000';
+import API_URL from '../config/api';
 
 export default function GenerateDeparts() {
   const navigate = useNavigate();
