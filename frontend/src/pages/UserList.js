@@ -32,7 +32,7 @@ export default function UserList() {
 
   const fetchVilles = async () => {
     try {
-      const res = await axios.get(`${API_URL}/villes`);
+      const res = await axios.get(`${API_URL}/villes/`);
       setVilles(res.data.active || []);
     } catch {
       setVilles([]);

@@ -21,7 +21,7 @@ export default function Register() {
   useEffect(() => {
     const loadVilles = async () => {
       try {
-        const res = await axios.get(`${API_URL}/villes`);
+        const res = await axios.get(`${API_URL}/villes/`);
         setVilles(res.data.active || []);
       } catch (_) {
         setVilles([]);

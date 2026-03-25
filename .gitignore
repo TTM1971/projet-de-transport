@@ -104,7 +104,7 @@ service-account.json
 # ============================================
 # Docker
 # ============================================
-.dockerignore
+# Les fichiers .dockerignore doivent rester versionnes (config de build).
 docker-compose.override.yml
 *.log
 
@@ -274,8 +274,15 @@ datasets/
 # ============================================
 # Projet spécifique
 # ============================================
-# Dossiers de base de données locaux
+# Dossiers de base de données locaux (PostgreSQL monté par Docker)
 database/
+# PID PostgreSQL (fichier runtime, ne pas versionner)
+postmaster.pid
+**/postmaster.pid
+
+# Données MinIO locales (ingestion pipeline)
+ingestion_pipeline/data/
+
 *.sql.gz
 
 # Fichiers de migration locaux (si vous avez des migrations sensibles)

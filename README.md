@@ -27,7 +27,9 @@ projet-de-transport/
 ├── ingestion_pipeline/data/  # Données MinIO persistées
 ├── docker-compose.yml        # Développement (React en mode dev sur :3000)
 ├── docker-compose.prod.yml   # Production locale : build statique servi par Nginx
-├── compose.env.example
+├── .env.example              # Modèle pour ".env" à la racine (Compose)
+├── compose.env.example       # Idem (raccourci)
+├── compose.prod.env.example    # Modèle prod / docker-compose.prod.yml
 └── README.md
 ```
 
@@ -48,19 +50,19 @@ projet-de-transport/
 
 ### 1) Configurer l'environnement Compose
 
-Depuis la racine du projet:
+Depuis la racine du projet, copiez le modèle vers `.env` (non versionné) :
 
 ```powershell
-copy compose.env.example .env
+copy .env.example .env
 ```
 
-ou sous bash:
+ou : `copy compose.env.example .env` (équivalent).
 
-```bash
-cp compose.env.example .env
-```
+Sous bash : `cp .env.example .env`
 
-Le fichier `.env` active `COMPOSE_BAKE=false` pour eviter des erreurs Compose sur certaines installations.
+Le fichier `.env` active au minimum `COMPOSE_BAKE=false` pour éviter certaines erreurs Compose. Détails et options : voir `.env.example`.
+
+Modèles complémentaires : `compose.prod.env.example`, `backend/.env.example`, `frontend/.env.example`.
 
 ### 2) Lancer tous les services
 
